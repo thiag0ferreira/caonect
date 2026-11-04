@@ -1,12 +1,14 @@
 import {useEffect,useState,type FormEvent} from 'react'
-import {Heart,MessageCircle,Send,ShieldCheck,ArrowLeft,MapPin,UserRound,Users,LockKeyhole} from 'lucide-react'
+import {Heart,MessageCircle,Send,ShieldCheck,ArrowLeft,MapPin,UserRound,Users,LockKeyhole,ClipboardCheck,House,CheckCircle2} from 'lucide-react'
 import {supabase,type PetListing} from './supabase'
 import type {User} from '@supabase/supabase-js'
 import './interactions.css'
+import {questionnaireLabels,questionnaireValues} from './AdoptionForm'
 
-export type AdoptionRequest={id:string;pet_id:string;adopter_id:string;owner_id:string;intent:'question'|'adoption';status:'pending'|'in_review'|'approved'|'rejected'|'cancelled';created_at:string}
+export type AdoptionRequest={id:string;pet_id:string;adopter_id:string;owner_id:string;intent:'question'|'adoption';status:'pending'|'in_review'|'approved'|'rejected'|'cancelled'|'completed';created_at:string}
 type Message={id:string;request_id:string;sender_id:string;body:string;created_at:string}
 type Participant={user_id:string;display_name:string;role:'adopter'|'protector'|'ngo';district:string;neighborhood:string;city:string}
+type Questionnaire={request_id:string;adopter_id:string;housing:string;household:string;children:string;other_pets:string;daily_time:string;experience:string;motivation:string}
 export function useCurrentUser(){
  const [user,setUser]=useState<User|null>(null)
  useEffect(()=>{if(!supabase)return;const client=supabase;let live=true;client.auth.getUser().then(r=>{if(live)setUser(r.data.user)});const {data:{subscription}}=client.auth.onAuthStateChange((_e,s)=>setUser(s?.user??null));return()=>{live=false;subscription.unsubscribe()}},[])
@@ -49,6 +51,7 @@ export function Conversations({user,onLogin}:{user:User|null;onLogin:()=>void}){
  const [messages,setMessages]=useState<Message[]>([])
  const [pets,setPets]=useState<Record<string,PetListing>>({})
  const [participants,setParticipants]=useState<Participant[]>([])
+ const [questionnaire,setQuestionnaire]=useState<Questionnaire|null>(null)
  const [participantError,setParticipantError]=useState('')
  const [draft,setDraft]=useState('')
  const [busy,setBusy]=useState(false)
@@ -75,6 +78,23 @@ export function Conversations({user,onLogin}:{user:User|null;onLogin:()=>void}){
   })
   return()=>{active=false}
  },[selected])
+ useEffect(()=>{
+  if(!supabase||!selected){setQuestionnaire(null);return}
+  const client=supabase;let live=true
+  setQuestionnaire(null)
+  client.from('adoption_questionnaires').select('*').eq('request_id',selected.id).maybeSingle()
+   .then(({data,error})=>{if(live){if(error)setError('Para consultar o formulário, execute o SQL DIFF 003.2.');else setQuestionnaire(data as Questionnaire|null)}})
+  return()=>{live=false}
+ },[selected])
+ const completeAdoption=async()=>{
+  if(!supabase||!selected||!user||selected.owner_id!==user.id)return
+  if(!window.confirm('O animal já foi entregue ao adotante? Esta ação concluirá a adoção e encerrará outras solicitações abertas.'))return
+  setBusy(true);setError('')
+  const {error}=await supabase.rpc('caonect_complete_adoption',{p_request_id:selected.id})
+  if(error)setError('Não foi possível concluir: '+error.message)
+  else{setSelected({...selected,status:'completed'});setRefresh(x=>x+1)}
+  setBusy(false)
+ }
  const roleName=(role:Participant['role'])=>role==='ngo'?'ONG':role==='protector'?'Protetor independente':'Adotante'
  const locationLabel=(p:Participant)=>[p.neighborhood,p.district,p.city||'Brasília'].filter(Boolean).join(' · ')
  useEffect(()=>{if(!supabase||!selected)return;let live=true
@@ -89,7 +109,7 @@ export function Conversations({user,onLogin}:{user:User|null;onLogin:()=>void}){
  const changeStatus=async(value:AdoptionRequest['status'])=>{if(!supabase||!selected)return;setBusy(true);const {error}=await supabase.from('adoption_requests').update({status:value}).eq('id',selected.id);if(error)setError(error.message);else{setSelected({...selected,status:value});setRefresh(x=>x+1)}setBusy(false)}
  if(!user)return <section className="section page"><h1>Minhas conversas e adoções</h1><div className="empty"><Heart size={36}/><p>Entre na sua conta para conversar com protetores e acompanhar suas solicitações.</p><button className="primary" onClick={onLogin}>Entrar ou cadastrar</button></div></section>
  return <section className="section page"><span className="kicker">UMA NOVA HISTÓRIA COMEÇA AQUI</span><h1>Conversas e adoções</h1><p>Converse com segurança pelo Cãonect. Evite compartilhar documentos, telefones e endereços antes de verificar o responsável.</p>{error&&<p className="portal-notice" role="alert">{error}</p>}
-  {selected?<div className="chat-box"><div className="chat-header"><button aria-label="Voltar às conversas" onClick={()=>{setSelected(null);setMessages([])}}><ArrowLeft size={20}/></button><div><strong>{pets[selected.pet_id]?.name||'Pet'}</strong><small> {selected.status==='pending'?'Pendente':selected.status==='in_review'?'Em análise':selected.status==='approved'?'Aprovada':selected.status==='rejected'?'Recusada':'Cancelada'}</small></div></div>
+  {selected?<div className="chat-box"><div className="chat-header"><button aria-label="Voltar às conversas" onClick={()=>{setSelected(null);setMessages([])}}><ArrowLeft size={20}/></button><div><strong>{pets[selected.pet_id]?.name||'Pet'}</strong><small> {selected.status==='pending'?'Pendente':selected.status==='in_review'?'Em análise':selected.status==='approved'?'Aprovada':selected.status==='rejected'?'Recusada':selected.status==='completed'?'Adoção concluída':'Cancelada'}</small></div></div>
    <div className="chat-participants">
     <div className="chat-pet-summary"><span className="chat-pet-icon">{pets[selected.pet_id]?.image_url?<img src={pets[selected.pet_id].image_url!} alt="" />:<Users size={24}/>}</span><div><strong>Conversa sobre {pets[selected.pet_id]?.name||'o animal'}</strong><small>{pets[selected.pet_id]?.breed||'Pet'} · {pets[selected.pet_id]?.district||'Distrito Federal'}</small></div></div>
     {participantError&&<p role="status" className="portal-notice">{participantError}</p>}
