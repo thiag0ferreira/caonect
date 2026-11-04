@@ -214,3 +214,29 @@ O fluxo testado por dois usuários passou em cinco etapas. Foi identificado um p
 **Execute essa migração no SQL Editor do Cãonect.** A operação apenas substitui a política de INSERT de mensagens, sem eliminar conversas, contas ou questionários existentes.
 
 Validação posterior recomendada: em uma solicitação de teste efetivamente concluída, confirmar que um INSERT direto em `adoption_messages` por um dos participantes é recusado e que a leitura do histórico continua autorizada. Não conclua uma adoção real apenas para testar.
+
+
+## DIFF 004 — Match Cãonect (v1, regras transparentes)
+
+O Match está no menu e na página inicial. Apresenta **sete perguntas**: moradia, crianças, outros pets, ritmo, tempo disponível, experiência e preferência de porte.
+
+As respostas ficam **somente no estado da página**, sem gravar perfil ou respostas no Supabase. As recomendações utilizam apenas pets reais com status `available`. A pontuação é interna para ordenação; o aplicativo não mostra porcentagens de compatibilidade, e não faz triagem automática de pessoas.
+
+Cada resultado explica:
+- características informadas que podem se alinhar à rotina;
+- alertas de atenção, como alta atividade com pouco tempo disponível;
+- pontos não confirmados, sobretudo convivência com crianças e outros animais.
+
+Características como `Não gosta de crianças` recebem destaque de atenção, nunca são apresentadas como compatibilidade segura. A confirmação da adoção continua sob responsabilidade humana.
+
+**Não há nova migração SQL no DIFF 004.** Basta o deploy automático do GitHub Actions.
+
+### Testar
+1. Abra Cãonect → Match e responda às sete perguntas.
+2. Confira que aparecem apenas animais reais disponíveis.
+3. Compare uma rotina tranquila e outra ativa: a ordem e os alertas podem variar conforme os dados do pet.
+4. Clique em **Conhecer** um animal: a aplicação navega para Explorar com o nome filtrado.
+5. Refazer questionário deve limpar as respostas.
+6. No celular, confira cartões, botões e aba Match na barra inferior.
+
+**Limitações:** não existe confirmação formal de comportamento nem verificação de segurança para crianças e outros pets. Sem informações suficientes, o resultado sinaliza incerteza. Regras serão refinadas em avaliações futuras.
