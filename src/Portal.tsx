@@ -24,6 +24,7 @@ export default function Portal({onPublished}:Props){
  const [role,setRole]=useState<Role>('adopter')
  const [city]=useState(CITY)
  const [district,setDistrict]=useState('')
+ const [signupNeighborhood,setSignupNeighborhood]=useState('')
  const [pets,setPets]=useState<PetListing[]>([])
  const [form,setForm]=useState(blank)
  const [traitList,setTraitList]=useState<string[]>([])
@@ -58,7 +59,7 @@ export default function Portal({onPublished}:Props){
   setBusy(true);setMessage('')
   const client=supabase
   if(mode==='signup'){
-   const {data,error}=await client.auth.signUp({email,password,options:{data:{display_name:fullName.trim(),role,city:city.trim(),district:district.trim()}}})
+   const {data,error}=await client.auth.signUp({email,password,options:{data:{display_name:fullName.trim(),role,city:CITY,district:district.trim(),neighborhood:signupNeighborhood.trim()}}})
    if(error)setMessage(error.message)
    else if(data.session){setUser(data.user);setMessage('Conta criada! Bem-vindo(a).')}
    else setMessage('Cadastro recebido. Confira seu e-mail para confirmar a conta. Depois entre com sua senha.')
@@ -152,7 +153,7 @@ export default function Portal({onPublished}:Props){
      <label>Como você deseja participar?</label>
      <div className="role-grid">{([{id:'adopter',name:'Adotante',icon:<Heart/>},{id:'protector',name:'Protetor',icon:<UserRound/>},{id:'ngo',name:'ONG',icon:<Building2/>}] as const).map(r=><button type="button" key={r.id} className={role===r.id?'selected':''} onClick={()=>setRole(r.id)}>{r.icon}<span>{r.name}</span></button>)}</div>
      <label>{role==='ngo'?'Nome da ONG':'Nome completo'}<input required minLength={2} maxLength={100} value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="Como podemos chamar você?"/></label>
-     <div className="portal-two"><label>Cidade<input value={CITY+' – DF'} disabled readOnly/></label><label>Região Administrativa *<select required value={district} onChange={e=>setDistrict(e.target.value)}><option value="">Selecione sua RA</option>{RAS.map(ra=><option key={ra} value={ra}>{ra}</option>)}</select></label></div>
+     <div className="portal-two"><label>Cidade<input value={CITY+' – DF'} disabled readOnly/></label><label>Região Administrativa *<select required value={district} onChange={e=>setDistrict(e.target.value)}><option value="">Selecione sua RA</option>{RAS.map(ra=><option key={ra} value={ra}>{ra}</option>)}</select></label></div><label>Bairro / setor (opcional)<input maxLength={80} value={signupNeighborhood} onChange={e=>setSignupNeighborhood(e.target.value)} placeholder="Ex.: Ceilândia Sul, P Sul"/></label>
     </>}
     <label>E-mail<input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@exemplo.com"/></label>
     <label>Senha<input type="password" required minLength={8} autoComplete={mode==='signup'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo de 8 caracteres"/></label>
