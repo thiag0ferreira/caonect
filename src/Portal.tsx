@@ -148,7 +148,7 @@ export default function Portal({onPublished}:Props){
   const image_url=photo_urls[0]||null
   const payload={name:form.name.trim(),species:form.species,animal_category:form.animal_category,scientific_name:form.scientific_name.trim()||null,legal_origin_notes:form.legal_origin_notes.trim(),size:form.size,
     age_label:form.age_label.trim(),city:CITY,district:form.district,neighborhood:form.neighborhood.trim(),
-    color:form.color,breed:form.breed.trim()||'Sem raça definida (SRD)',
+    color:form.color,breed:form.breed.trim()||(form.animal_category==='Cachorros'||form.animal_category==='Gatos'?'Sem raça definida (SRD)':''),
     approximate_lat:petCoords?.lat??null,approximate_lng:petCoords?.lng??null,
     description:form.description.trim(),personality:traitList,photo_urls,image_url}
   const {data,error}=editingPet
