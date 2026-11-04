@@ -9,7 +9,7 @@ import {SUPPORTED_CITIES,stateForCity,districtLabel,neighborhoodLabel,normalizeD
 
 type Role='adopter'|'protector'|'ngo'
 type Profile={id:string;display_name:string;role:Role;city:string;district:string;neighborhood?:string;phone:string|null}
-const blank={name:'',animal_category:'Cachorros',species:'Cachorro',scientific_name:'',legal_origin_notes:'',size:'Médio',age_label:'',city:DEFAULT_CITY,district:'',neighborhood:'',color:'',breed:'Sem raça definida (SRD)',description:''}
+const blank={name:'',animal_category:'Cachorros',species:'Cachorro',scientific_name:'',legal_origin_notes:'',size:'Médio',age_label:'',city:DEFAULT_CITY as string,district:'',neighborhood:'',color:'',breed:'Sem raça definida (SRD)',description:''}
 const traits=['Dócil','Tranquilo','Ativo','Afetuoso','Curioso','Explorador','Tímido','Brincalhão','Sociável','Independente','Bagunceiro','Bravo','Territorial','Agitado','Medroso','Assustado','Desconfiado','Ciumento','Teimoso','Protetor','Carente','Fujão','Reativo com outros animais','Não gosta de crianças','Precisa de espaço']
 const colors=['Preto','Cinza','Branco','Chocolate','Creme','Fulvo','Mogno','Dourado','Caramelo','Rajado']
 type Props={onPublished?:()=>void}
@@ -42,7 +42,7 @@ export default function Portal({onPublished}:Props){
  const [editingPet,setEditingPet]=useState<string|null>(null)
  const [petCoords,setPetCoords]=useState<{lat:number;lng:number}|null>(null)
  const [editingProfile,setEditingProfile]=useState(false)
- const [profileFields,setProfileFields]=useState({display_name:'',city:DEFAULT_CITY,district:'',neighborhood:'',phone:''})
+ const [profileFields,setProfileFields]=useState({display_name:'',city:DEFAULT_CITY as string,district:'',neighborhood:'',phone:''})
  useEffect(()=>{
   const fragment=new URLSearchParams(window.location.hash.slice(1))
   const query=new URLSearchParams(window.location.search)
