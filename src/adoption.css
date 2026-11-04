@@ -1,0 +1,29 @@
+/* DIFF 003.2 — Questionário e análise de adoção */
+.adoption-overlay{position:fixed;inset:0;z-index:65;background:#172b25b8;padding:20px;display:flex;align-items:center;justify-content:center;overflow:auto}
+.adoption-dialog{background:#fff;width:min(760px,100%);max-height:94vh;overflow-y:auto;border-radius:22px;box-shadow:0 20px 65px #091d153b;color:#264d45}
+.adoption-top{display:flex;justify-content:space-between;align-items:start;gap:18px;padding:28px 32px 12px;border-bottom:1px solid #e9eee8}
+.adoption-top h2{margin:8px 0;color:#264d45;font-size:29px}
+.adoption-top p{font-size:14px;color:#70857b;margin:0 0 14px}
+.adoption-top>button{padding:9px;border-radius:50%;background:#f1f5f1}
+.adoption-form{padding:25px 32px 32px;display:grid;gap:19px}
+.adoption-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.adoption-form label{display:grid;gap:7px;color:#315e4d;font-size:13px;font-weight:800}
+.adoption-form select,.adoption-form textarea{width:100%;border:1px solid #d8e5dc;border-radius:11px;padding:13px;background:#fbfcfa;color:#2d4539;font:inherit;font-weight:500;min-width:0}
+.adoption-form textarea{resize:vertical}
+.adoption-form-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.adoption-privacy{display:flex;gap:11px;align-items:start;padding:14px 16px;background:#f1f7f2;color:#527263;border-radius:13px;font-size:12px;line-height:1.55}
+.adoption-privacy svg{flex-shrink:0;color:#377c5b}
+.adoption-login{padding:30px}.adoption-login p{font-size:14px}
+.adoption-review{padding:19px 22px;background:#fbfcfa;border-bottom:1px solid #e2e9e2}
+.review-heading{display:flex;align-items:center;gap:8px;color:#264d45;margin-bottom:12px}
+.review-heading strong{font-family:Nunito,sans-serif;font-size:17px}
+.review-heading span{margin-left:auto;color:#65907b;background:#ebf5ed;border-radius:30px;padding:6px 10px;font-size:11px;font-weight:800}
+.review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.review-answer{background:white;padding:13px 15px;border:1px solid #e1eae2;border-radius:12px;min-width:0}
+.review-answer small{display:block;color:#809084;font-size:11px;margin-bottom:5px}
+.review-answer strong{font-size:13px;color:#2d5040;overflow-wrap:anywhere;white-space:pre-wrap;line-height:1.5}
+.review-wide{grid-column:1/-1}
+.review-empty{font-size:13px;margin:0;color:#718176}
+.adoption-completed{margin-top:13px;padding:12px;display:flex;align-items:center;gap:9px;background:#ddf3e5;border-radius:12px;color:#255d3d}
+.complete-adoption-button{font-size:12px!important;padding:11px 14px!important}
+@media(max-width:650px){.adoption-overlay{padding:8px}.adoption-dialog{max-height:96vh;border-radius:15px}.adoption-top{padding:19px 18px 10px}.adoption-top h2{font-size:24px}.adoption-form{padding:19px 18px}.adoption-form-grid,.review-grid{grid-template-columns:1fr}.review-wide{grid-column:auto}.adoption-form-actions{display:grid;grid-template-columns:1fr}.review-heading{flex-wrap:wrap}.chat-status{display:flex;flex-direction:column;gap:10px;align-items:stretch}.chat-status .primary{width:100%}}
