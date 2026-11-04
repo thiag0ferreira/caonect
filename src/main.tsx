@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useState,type ReactNode} from 'react'
 import {createRoot} from 'react-dom/client'
 import {Heart,Search,House,UserRound,ClipboardList,ArrowRight,ShieldCheck,Sparkles,X,Menu,PawPrint,MessageCircle} from 'lucide-react'
 import CommunityPets from './CommunityPets'
@@ -8,7 +8,7 @@ import './style.css'
 import './interactions.css'
 
 type Page='Início'|'Explorar'|'Favoritos'|'Adoções'|'Perfil'
-const nav:{name:Page;icon:React.ReactNode}[]=[{name:'Início',icon:<House/>},{name:'Explorar',icon:<Search/>},{name:'Favoritos',icon:<Heart/>},{name:'Adoções',icon:<ClipboardList/>},{name:'Perfil',icon:<UserRound/>}]
+const nav:{name:Page;icon:ReactNode}[]=[{name:'Início',icon:<House/>},{name:'Explorar',icon:<Search/>},{name:'Favoritos',icon:<Heart/>},{name:'Adoções',icon:<ClipboardList/>},{name:'Perfil',icon:<UserRound/>}]
 function App(){
  const [page,setPage]=useState<Page>('Início')
  const [query,setQuery]=useState(''),[location,setLocation]=useState(''),[species,setSpecies]=useState('Todos'),[size,setSize]=useState('Todos'),[menu,setMenu]=useState(false)
