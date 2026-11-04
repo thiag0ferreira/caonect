@@ -63,6 +63,7 @@ begin
  if v_pet_status is null or v_pet_status not in ('available','reserved') then
    raise exception 'Este pet não está disponível para conclusão';
  end if;
+ perform set_config('caonect.finalizing_adoption','yes',true);
  update public.pets set status='adopted' where id=v_request.pet_id;
  update public.adoption_requests set status='completed',completed_at=now()
   where id=p_request_id;
@@ -70,7 +71,8 @@ begin
  update public.adoption_requests set status='rejected'
   where pet_id=v_request.pet_id and id<>p_request_id
     and status in ('pending','in_review','approved');
-end $$;
+ perform set_config('caonect.finalizing_adoption','',true);
+end $;
 revoke all on function public.caonect_complete_adoption(uuid) from public,anon;
 grant execute on function public.caonect_complete_adoption(uuid) to authenticated;
 
@@ -88,6 +90,9 @@ begin
     raise exception 'Solicitação de adoção exige questionário antes da aprovação';
  end if;
  if new.status='completed' and old.status is distinct from 'completed' then
+   if coalesce(current_setting('caonect.finalizing_adoption',true),'')<>'yes' then
+     raise exception 'Conclua a adoção pelo procedimento protegido';
+   end if;
    if new.completed_at is null or old.status<>'approved' or
      not exists(select 1 from public.pets where id=new.pet_id and status='adopted') then
      raise exception 'Conclusão inválida. Utilize o fluxo de adoção';
@@ -104,3 +109,18 @@ for each row execute function public.caonect_guard_completed_request();
 
 -- Acessos antigos são mantidos. O status approved significa aprovação
 -- da solicitação, NÃO que o pet foi entregue.
+
+-- Uma adoção concluída não pode ser reaberta mudando o pet para disponível
+-- no painel. Casos excepcionais exigem revisão administrativa.
+create or replace function public.caonect_lock_adopted_pet()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+ if old.status='adopted' and new.status <> 'adopted' and
+    exists(select 1 from public.adoption_requests r where r.pet_id=old.id and r.status='completed') then
+   raise exception 'Este animal possui uma adoção concluída. Procure o suporte para corrigir';
+ end if;
+ return new;
+end $$;
+drop trigger if exists caonect_lock_adopted_pet on public.pets;
+create trigger caonect_lock_adopted_pet before update of status on public.pets
+for each row execute function public.caonect_lock_adopted_pet();
