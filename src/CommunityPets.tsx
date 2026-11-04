@@ -4,6 +4,7 @@ import {supabase,isBackendReady,type PetListing} from './supabase'
 import {useCurrentUser,useFavorites,startConversation} from './Interactions'
 import type {User} from '@supabase/supabase-js'
 import './interactions.css'
+import AdoptionForm from './AdoptionForm'
 
 type Props={mode?:'featured'|'explore'|'favorites';query?:string;location?:string;species?:string;size?:string;limit?:number;onLogin?:()=>void;onChat?:()=>void;user?:User|null}
 export default function CommunityPets({mode='explore',query='',location='',species='Todos',size='Todos',limit,onLogin,onChat,user:passedUser}:Props){
@@ -13,6 +14,7 @@ export default function CommunityPets({mode='explore',query='',location='',speci
  const [pets,setPets]=useState<PetListing[]>([])
  const [detail,setDetail]=useState<PetListing|null>(null)
  const [photoIndex,setPhotoIndex]=useState(0)
+ const [adopting,setAdopting]=useState<PetListing|null>(null)
  const [error,setError]=useState('')
  const [working,setWorking]=useState(false)
  const [notice,setNotice]=useState('')
@@ -75,11 +77,12 @@ export default function CommunityPets({mode='explore',query='',location='',speci
    <div className="modal-content"><span className="kicker">UM NOVO AMIGO</span><h2>{detail.name}</h2><p>{detail.species} · {detail.age_label} · Porte {detail.size.toLowerCase()}</p><p>Raça: {detail.breed||'Sem raça definida (SRD)'}</p>{position&&distance(detail)!=null&&<p className="pet-distance">Aproximadamente {Math.round(distance(detail)!)} km de você</p>}<small><MapPin size={15}/>{detail.neighborhood?detail.neighborhood+' · ':''}{detail.district}, {detail.city}</small><div className="tags">{detail.color&&<span>{detail.color}</span>}{detail.personality.map(t=><span key={t}>♡ {t}</span>)}</div><h3>Conheça minha história</h3><p>{detail.description}</p>
     <div className="pet-actions"><button disabled={working} className={'secondary '+(ids.includes(detail.id)?'liked':'')} onClick={()=>favorite(detail)}><Heart size={17} fill={ids.includes(detail.id)?'currentColor':'none'}/>{ids.includes(detail.id)?'Salvo nos favoritos':'Curtir / Favoritar'}</button>
     <button disabled={working||detail.owner_id===user?.id} className="secondary" onClick={()=>contact('question')}><MessageCircle size={17}/> Conversar</button>
-    <button disabled={working||detail.owner_id===user?.id} className="primary" onClick={()=>contact('adoption')}>Tenho interesse em adotar</button></div>
+    <button disabled={working||detail.owner_id===user?.id} className="primary" onClick={()=>{setAdopting(detail);setDetail(null)}}>Tenho interesse em adotar</button></div>
     {detail.owner_id===user?.id&&<p className="demo-note">Você é responsável por este pet. Gerencie-o em Perfil.</p>}
     {notice&&<p className="portal-notice" role="status">{notice} {!user&&<button className="link-button" onClick={onLogin}>Entrar / Criar conta</button>}</p>}
     <p className="safe-note"><ShieldCheck size={15}/> Conversas privadas dentro do Cãonect. Não compartilhe informações sensíveis.</p>
    </div>
   </section></div>}
+  {adopting&&<AdoptionForm pet={adopting} user={user} onClose={()=>setAdopting(null)} onSuccess={()=>{setAdopting(null);onChat?.()}} onLogin={()=>{setAdopting(null);onLogin?.()}}/>}
  </div>
 }
