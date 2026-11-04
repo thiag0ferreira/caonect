@@ -345,3 +345,31 @@ transacional, preservando os pets, fotos, conversas e perfis existentes.
 
 Fontes para validar ONG: notícias da Prefeitura de Fernandópolis sobre parceria
 com a Associação Pelos e Patas (2024 e 2026).
+
+
+### DIFF 006.4.1 — Bairros e áreas rurais de Fernandópolis
+
+Foram adicionadas **21 sugestões** fornecidas pela comunidade local, incluindo
+Centro, Bairro Coester, Brasilândia, diversos jardins e vilas, além de Área Rural
+de Fernandópolis e Área Rural de Brasitânia. Também consta a variante
+`Vila Santa Isabel` (por vezes grafada `Vila Santa Izabel`).
+
+As sugestões estão em `src/supportedLocations.ts`, no vetor
+`FERNANDOPOLIS_AREAS`. Não representam uma lista municipal oficial ou exaustiva.
+Para adicionar bairros futuramente, atualize esse vetor.
+
+O cadastro de conta, a edição do perfil e o cadastro do pet utilizam
+um campo com sugestões (datalist HTML), mas aceitam **outro bairro digitado
+livremente**. Isso evita bloquear novas áreas ou grafias locais.
+
+Na página inicial e em Explorar, ao selecionar Fernandópolis, o usuário
+pode escolher uma sugestão ou digitar um bairro para filtrar os anúncios.
+Brasília continua com suas RAs cadastradas.
+
+Sem alteração no SQL: a coluna `district` já aceita texto. A migração
+`diff-0064-brasilia-fernandopolis.sql` deve estar aplicada antes de
+cadastrar novas contas ou animais em Fernandópolis.
+
+**Teste rápido após deploy:** selecionar Fernandópolis, digitar Jardim Santa Rita
+no cadastro, voltar ao catálogo e filtrar por esse bairro. Confirmar que
+Brasília/DF e as RAs continuam normais.
