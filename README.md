@@ -102,3 +102,30 @@ Atualizado: o catálogo de demonstração foi removido da Home, Explorar e Favor
 - O botão **Curtir** significa marcar como favorito, não corresponde a uma contagem pública de curtidas.
 - A plataforma ainda precisa de moderação, denúncia, bloqueio, política de privacidade e controles de abuso para lançamento amplo.
 - A migração depende da execução manual no Supabase. **O frontend sozinho não cria tabelas.**
+
+
+## DIFF 002.2 — Perfil, raça, personalidade, proximidade e mural
+
+**Antes de testar**, execute `supabase/diff-0022-perfil-proximidade-atividade.sql` no **SQL Editor** do projeto Cãonect. O arquivo adiciona colunas e tabela de eventos, sem apagar os pets ou as contas existentes. Se você ainda não executou o `diff-0021-interacoes.sql`, faça também para ativar favoritos e chat.
+
+### O que muda
+- Perfil: nome, cidade, bairro e telefone privado podem ser editados por seu dono.
+- Perfil: categoria da conta é fixa (adotante/protetor/ONG) até haver verificação administrativa. E-mail e senha continuam gerenciados no Supabase Auth.
+- Cadastro e edição de pets: raça, cor, características (inclusive bagunceiro, bravo, territorial, medroso, reativo) e localização aproximada opcional.
+- A localização do pet é capturada **somente após clique e permissão do navegador**, arredondada a 2 casas decimais antes de salvar. Não utilize GPS no endereço de abrigos sigilosos ou lares vulneráveis: escolha uma região pública próxima, se apropriado.
+- Explorar: botão **Buscar perto de mim** solicita permissão para ler a localização do visitante, somente na sessão, sem gravá-la no banco. Filtro por raio 5, 10, 25, 50, 100 ou 200 km. Pets sem coordenada aproximada ficam de fora do filtro por raio, mas aparecem na busca habitual por região.
+- Página inicial: mural dos **eventos de verdade** (cadastro e mudanças de situação), sem simular números ou mostrar informações de adotantes. "Adotado" é uma declaração do protetor; não uma confirmação independente.
+- **Antes de uma adoção real**: incluir moderação, denúncia e mecanismos de verificação e privacidade. Evite inserir dados pessoais nas descrições públicas.
+
+### Teste básico
+
+1. Execute o SQL e confirme `Success. No rows returned`.
+2. Atualize o site após GitHub Actions marcar verde.
+3. Perfil → Editar perfil → alterar bairro e salvar.
+4. Perfil → Meus animais → Editar pet → preencher raça e características; GPS opcional. Salvar.
+5. Explorar → Buscar perto de mim → permitir localização → definir raio. Se nenhum pet tiver coordenadas aproximadas, a busca por raio retornará vazia.
+6. No perfil do protetor, mude o status do animal e veja o evento correspondente em **Nossa comunidade em movimento**. Alterações são públicas; use estados verdadeiros.
+
+### Segurança
+
+RLS protege as tabelas privadas. A tabela `pet_activity` só permite escrita via gatilho do servidor. A informação sobre região/animal e o status de adoção ficam públicos. Pessoas não devem cadastrar endereços residenciais nas descrições.
