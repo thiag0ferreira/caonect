@@ -3,10 +3,11 @@ import { supabase, isBackendReady, type PetListing } from './supabase'
 import type { User } from '@supabase/supabase-js'
 import { Heart, ShieldCheck, LogIn, LogOut, Plus, PawPrint, Building2, UserRound, ImagePlus, Trash2, Pencil, MapPin, Save, X } from 'lucide-react'
 import './portal.css'
+import {CITY,RAS,normalizeRA} from './dfRegions'
 
 type Role='adopter'|'protector'|'ngo'
-type Profile={id:string;display_name:string;role:Role;city:string;district:string;phone:string|null}
-const blank={name:'',species:'Cachorro',size:'Médio',age_label:'',city:'Brasília',district:'',color:'',breed:'Sem raça definida (SRD)',description:''}
+type Profile={id:string;display_name:string;role:Role;city:string;district:string;neighborhood?:string;phone:string|null}
+const blank={name:'',species:'Cachorro',size:'Médio',age_label:'',city:CITY,district:'',neighborhood:'',color:'',breed:'Sem raça definida (SRD)',description:''}
 const traits=['Dócil','Tranquilo','Ativo','Afetuoso','Curioso','Explorador','Tímido','Brincalhão','Sociável','Independente','Bagunceiro','Bravo','Territorial','Agitado','Medroso','Assustado','Desconfiado','Ciumento','Teimoso','Protetor','Carente','Fujão','Reativo com outros animais','Não gosta de crianças','Precisa de espaço']
 const colors=['Preto','Cinza','Branco','Chocolate','Creme','Fulvo','Mogno','Dourado','Caramelo','Rajado']
 type Props={onPublished?:()=>void}
@@ -21,17 +22,18 @@ export default function Portal({onPublished}:Props){
  const [password,setPassword]=useState('')
  const [fullName,setFullName]=useState('')
  const [role,setRole]=useState<Role>('adopter')
- const [city,setCity]=useState('Brasília')
+ const [city]=useState(CITY)
  const [district,setDistrict]=useState('')
  const [pets,setPets]=useState<PetListing[]>([])
  const [form,setForm]=useState(blank)
  const [traitList,setTraitList]=useState<string[]>([])
- const [photo,setPhoto]=useState<File|null>(null)
+ const [photos,setPhotos]=useState<File[]>([])
+ const [existingPhotos,setExistingPhotos]=useState<string[]>([])
  const [showForm,setShowForm]=useState(false)
  const [editingPet,setEditingPet]=useState<string|null>(null)
  const [petCoords,setPetCoords]=useState<{lat:number;lng:number}|null>(null)
  const [editingProfile,setEditingProfile]=useState(false)
- const [profileFields,setProfileFields]=useState({display_name:'',city:'',district:'',phone:''})
+ const [profileFields,setProfileFields]=useState({display_name:'',city:CITY,district:'',neighborhood:'',phone:''})
  useEffect(()=>{
   if(!supabase)return
   const client=supabase
@@ -44,9 +46,9 @@ export default function Portal({onPublished}:Props){
   if(!supabase||!user){setProfile(null);setPets([]);return}
   const client=supabase;let active=true
   Promise.all([
-    client.from('profiles').select('id,display_name,role,city,district,phone').eq('id',user.id).maybeSingle(),
+    client.from('profiles').select('id,display_name,role,city,district,neighborhood,phone').eq('id',user.id).maybeSingle(),
     client.from('pets').select('*').eq('owner_id',user.id).order('created_at',{ascending:false})
-  ]).then(([p,l])=>{if(active){if(p.error)setMessage('Erro ao carregar perfil: '+p.error.message);setProfile(p.data as Profile|null);if(p.data)setProfileFields({display_name:p.data.display_name||'',city:p.data.city||'',district:p.data.district||'',phone:p.data.phone||''});setPets((l.data??[]) as PetListing[])}})
+  ]).then(([p,l])=>{if(active){if(p.error)setMessage('Erro ao carregar perfil: '+p.error.message);setProfile(p.data as Profile|null);if(p.data)setProfileFields({display_name:p.data.display_name||'',city:p.data.city||'',district:normalizeRA(p.data.district||'')||'',neighborhood:p.data.neighborhood||(!normalizeRA(p.data.district||'')?p.data.district||'':''),phone:p.data.phone||''});setPets((l.data??[]) as PetListing[])}})
   return()=>{active=false}
  },[user])
  const auth=async(e:FormEvent)=>{
@@ -66,16 +68,16 @@ export default function Portal({onPublished}:Props){
  }
  const saveProfile=async(e:FormEvent)=>{
   e.preventDefault();if(!supabase||!user||!profile)return
-  if(!profileFields.display_name.trim()||!profileFields.city.trim()||!profileFields.district.trim()){setMessage('Preencha nome, cidade e região.');return}
+  if(!profileFields.display_name.trim()||!profileFields.district.trim()){setMessage('Preencha nome, cidade e região.');return}
   setBusy(true);setMessage('')
-  const data={display_name:profileFields.display_name.trim(),city:profileFields.city.trim(),district:profileFields.district.trim(),phone:profileFields.phone.trim()||null}
+  const data={display_name:profileFields.display_name.trim(),city:CITY,district:profileFields.district,neighborhood:profileFields.neighborhood.trim(),phone:profileFields.phone.trim()||null}
   const {error}=await supabase.from('profiles').update(data).eq('id',user.id)
   if(error)setMessage('Não foi possível salvar o perfil: '+error.message)
   else{setProfile({...profile,...data});setEditingProfile(false);setMessage('Informações pessoais atualizadas.')}
   setBusy(false)
  }
- const startNewPet=()=>{setEditingPet(null);setForm(blank);setTraitList([]);setPhoto(null);setPetCoords(null);setShowForm(true);setMessage('')}
- const editPet=(p:PetListing)=>{setEditingPet(p.id);setForm({name:p.name,species:p.species,size:p.size,age_label:p.age_label,city:p.city,district:p.district,color:p.color,breed:p.breed||'Sem raça definida (SRD)',description:p.description});setTraitList(p.personality||[]);setPetCoords(p.approximate_lat!=null&&p.approximate_lng!=null?{lat:p.approximate_lat,lng:p.approximate_lng}:null);setPhoto(null);setShowForm(true);setMessage('');setTimeout(()=>document.getElementById('pet-form')?.scrollIntoView({behavior:'smooth',block:'start'}),50)}
+ const startNewPet=()=>{setEditingPet(null);setForm(blank);setTraitList([]);setPhotos([]);setExistingPhotos([]);setPetCoords(null);setShowForm(true);setMessage('')}
+ const editPet=(p:PetListing)=>{setEditingPet(p.id);setForm({name:p.name,species:p.species,size:p.size,age_label:p.age_label,city:CITY,district:normalizeRA(p.district)||'',neighborhood:p.neighborhood||(!normalizeRA(p.district)?p.district:''),color:p.color,breed:p.breed||'Sem raça definida (SRD)',description:p.description});setExistingPhotos(p.photo_urls?.length?p.photo_urls:(p.image_url?[p.image_url]:[]));setTraitList(p.personality||[]);setPetCoords(p.approximate_lat!=null&&p.approximate_lng!=null?{lat:p.approximate_lat,lng:p.approximate_lng}:null);setPhoto(null);setShowForm(true);setMessage('');setTimeout(()=>document.getElementById('pet-form')?.scrollIntoView({behavior:'smooth',block:'start'}),50)}
  const getPetApproxLocation=()=>{
   if(!navigator.geolocation){setMessage('Seu navegador não oferece geolocalização.');return}
   setBusy(true);setMessage('')
@@ -88,28 +90,35 @@ export default function Portal({onPublished}:Props){
   e.preventDefault()
   if(!supabase||!user||!profile||profile.role==='adopter')return
   if(!form.name.trim()||!form.description.trim()||!form.district.trim()||!form.age_label.trim()){setMessage('Preencha os campos obrigatórios.');return}
-  if(photo&&(!photo.type.startsWith('image/')||photo.size>5*1024*1024)){setMessage('Use uma foto de até 5 MB.');return}
+  if(existingPhotos.length+photos.length>5){setMessage('O limite é de cinco fotos por pet.');return}
+  if(photos.some(file=>!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024)){setMessage('Cada foto deve ser JPG, PNG ou WebP, até 5 MB.');return}
   setBusy(true);setMessage('')
   const client=supabase
-  let photoPath:string|null=null
-  if(photo){
-   const ext=photo.name.split('.').pop()?.toLowerCase()||'jpg'
-   if(!['jpg','jpeg','png','webp'].includes(ext)){setBusy(false);setMessage('Formato permitido: JPG, PNG ou WebP.');return}
-   photoPath=`${user.id}/${crypto.randomUUID()}.${ext}`
-   const uploaded=await client.storage.from('pet-images').upload(photoPath,photo,{upsert:false,contentType:photo.type})
-   if(uploaded.error){setBusy(false);setMessage('Falha no envio da foto: '+uploaded.error.message);return}
+  const uploadedPaths:string[]=[]
+  const newUrls:string[]=[]
+  for(const file of photos){
+    const ext=file.type==='image/png'?'png':file.type==='image/webp'?'webp':'jpg'
+    const path=`${user.id}/${crypto.randomUUID()}.${ext}`
+    const result=await client.storage.from('pet-images').upload(path,file,{upsert:false,contentType:file.type})
+    if(result.error){
+      if(uploadedPaths.length)await client.storage.from('pet-images').remove(uploadedPaths)
+      setMessage('Falha ao enviar imagens: '+result.error.message);setBusy(false);return
+    }
+    uploadedPaths.push(path)
+    newUrls.push(client.storage.from('pet-images').getPublicUrl(path).data.publicUrl)
   }
-  const image_url=photoPath?client.storage.from('pet-images').getPublicUrl(photoPath).data.publicUrl:null
+  const photo_urls=[...existingPhotos,...newUrls].slice(0,5)
+  const image_url=photo_urls[0]||null
   const payload={name:form.name.trim(),species:form.species,size:form.size,
-    age_label:form.age_label.trim(),city:form.city.trim(),district:form.district.trim(),
+    age_label:form.age_label.trim(),city:CITY,district:form.district,neighborhood:form.neighborhood.trim(),
     color:form.color,breed:form.breed.trim()||'Sem raça definida (SRD)',
     approximate_lat:petCoords?.lat??null,approximate_lng:petCoords?.lng??null,
-    description:form.description.trim(),personality:traitList}
+    description:form.description.trim(),personality:traitList,photo_urls,image_url}
   const {data,error}=editingPet
-    ?await client.from('pets').update({...payload,...(image_url?{image_url}:{})}).eq('id',editingPet).eq('owner_id',user.id).select('*').single()
-    :await client.from('pets').insert({...payload,owner_id:user.id,image_url,status:'available'}).select('*').single()
+    ?await client.from('pets').update(payload).eq('id',editingPet).eq('owner_id',user.id).select('*').single()
+    :await client.from('pets').insert({...payload,owner_id:user.id,status:'available'}).select('*').single()
   if(error){
-   if(photoPath)await client.storage.from('pet-images').remove([photoPath])
+   if(uploadedPaths.length)await client.storage.from('pet-images').remove(uploadedPaths)
    setMessage('Não foi possível cadastrar: '+error.message)
   }else{
    setPets(a=>editingPet?a.map(p=>p.id===editingPet?data as PetListing:p):[data as PetListing,...a]);setForm(blank);setTraitList([]);setPhoto(null);setPetCoords(null);setEditingPet(null)
@@ -141,7 +150,7 @@ export default function Portal({onPublished}:Props){
      <label>Como você deseja participar?</label>
      <div className="role-grid">{([{id:'adopter',name:'Adotante',icon:<Heart/>},{id:'protector',name:'Protetor',icon:<UserRound/>},{id:'ngo',name:'ONG',icon:<Building2/>}] as const).map(r=><button type="button" key={r.id} className={role===r.id?'selected':''} onClick={()=>setRole(r.id)}>{r.icon}<span>{r.name}</span></button>)}</div>
      <label>{role==='ngo'?'Nome da ONG':'Nome completo'}<input required minLength={2} maxLength={100} value={fullName} onChange={e=>setFullName(e.target.value)} placeholder="Como podemos chamar você?"/></label>
-     <div className="portal-two"><label>Cidade<input required maxLength={80} value={city} onChange={e=>setCity(e.target.value)}/></label><label>Região / bairro<input required maxLength={80} value={district} onChange={e=>setDistrict(e.target.value)} placeholder="Ex.: Ceilândia"/></label></div>
+     <div className="portal-two"><label>Cidade<input value={CITY+' – DF'} disabled readOnly/></label><label>Região Administrativa *<select required value={value} onChange={fun}><option value="">Selecione sua RA</option>{RAS.map(ra=><option key={ra} value={ra}>{ra}</option>)}</select></label></div>
     </>}
     <label>E-mail<input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@exemplo.com"/></label>
     <label>Senha<input type="password" required minLength={8} autoComplete={mode==='signup'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo de 8 caracteres"/></label>
@@ -152,7 +161,7 @@ export default function Portal({onPublished}:Props){
   </div>}
   {user&&<div className="portal-dashboard">
    <div className="dashboard-head"><div className="profile-avatar"><UserRound size={27}/></div><div><h2>Olá, {profile?.display_name||user.email}!</h2><p>{profile?.role==='ngo'?'ONG':profile?.role==='protector'?'Protetor independente':'Adotante'} {profile?.district?'· '+profile.district:''}</p></div><div className="profile-actions"><button className="secondary" onClick={()=>setEditingProfile(v=>!v)}><Pencil size={16}/> {editingProfile?'Fechar edição':'Editar perfil'}</button><button className="secondary" onClick={signOut}>Sair <LogOut size={16}/></button></div></div>
-   {editingProfile&&profile&&<form className="portal-panel portal-form profile-edit" onSubmit={saveProfile}><h3>Editar minhas informações</h3><label>Nome ou nome da ONG<input required maxLength={100} value={profileFields.display_name} onChange={e=>setProfileFields({...profileFields,display_name:e.target.value})}/></label><div className="portal-two"><label>Cidade<input required maxLength={80} value={profileFields.city} onChange={e=>setProfileFields({...profileFields,city:e.target.value})}/></label><label>Região / bairro<input required maxLength={80} value={profileFields.district} onChange={e=>setProfileFields({...profileFields,district:e.target.value})}/></label></div><label>Telefone (opcional, privado)<input type="tel" maxLength={25} value={profileFields.phone} onChange={e=>setProfileFields({...profileFields,phone:e.target.value})} placeholder="(61) 99999-9999"/></label><small>Seu telefone não é exibido publicamente. Alterações de e-mail e senha são gerenciadas pela autenticação.</small><button disabled={busy} className="primary"><Save size={17}/> Salvar alterações</button></form>}
+   {editingProfile&&profile&&<form className="portal-panel portal-form profile-edit" onSubmit={saveProfile}><h3>Editar minhas informações</h3><label>Nome ou nome da ONG<input required maxLength={100} value={profileFields.display_name} onChange={e=>setProfileFields({...profileFields,display_name:e.target.value})}/></label><div className="portal-two"><label>Cidade<input value={CITY+' – DF'} disabled readOnly/></label><label>Região Administrativa *<select required value={value} onChange={fun}><option value="">Selecione sua RA</option>{RAS.map(ra=><option key={ra} value={ra}>{ra}</option>)}</select></label></div><label>Bairro / setor (opcional)<input maxLength={80} placeholder="Ex.: Ceilândia Sul" value={profileFields.neighborhood} onChange={e=>setProfileFields({...profileFields,neighborhood:e.target.value})}/></label><label>Telefone (opcional, privado)<input type="tel" maxLength={25} value={profileFields.phone} onChange={e=>setProfileFields({...profileFields,phone:e.target.value})} placeholder="(61) 99999-9999"/></label><small>Seu telefone não é exibido publicamente. Alterações de e-mail e senha são gerenciadas pela autenticação.</small><button disabled={busy} className="primary"><Save size={17}/> Salvar alterações</button></form>}
    {profile?.role==='adopter'&&<div className="portal-alert"><Heart/><div><strong>Seu perfil de adotante está pronto.</strong><p>Encontre um pet em Explorar. As solicitações reais e o acompanhamento serão conectados na próxima etapa.</p></div></div>}
    {!profile&&<div className="portal-alert">Estamos preparando seu perfil. Se acabou de confirmar o e-mail, atualize esta página.</div>}
    {profile&&profile.role!=='adopter'&&<>
@@ -162,13 +171,13 @@ export default function Portal({onPublished}:Props){
      <h3>{editingPet?'Editar informações do pet':'Vamos apresentar esse novo amigo?'}</h3>
      <div className="portal-two"><label>Nome do pet *<input required maxLength={70} value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Idade aproximada *<input required maxLength={50} placeholder="Ex.: 2 anos" value={form.age_label} onChange={e=>setForm({...form,age_label:e.target.value})}/></label></div>
      <div className="portal-two"><label>Espécie<select value={form.species} onChange={e=>setForm({...form,species:e.target.value})}><option>Cachorro</option><option>Gato</option></select></label><label>Porte<select value={form.size} onChange={e=>setForm({...form,size:e.target.value})}><option>Pequeno</option><option>Médio</option><option>Grande</option></select></label></div>
-     <div className="portal-two"><label>Cidade *<input required maxLength={80} value={form.city} onChange={e=>setForm({...form,city:e.target.value})}/></label><label>Região / bairro *<input required maxLength={80} value={form.district} onChange={e=>setForm({...form,district:e.target.value})}/></label></div>
+     <div className="portal-two"><label>Cidade<input value={CITY+' – DF'} disabled readOnly/></label><label>Região Administrativa *<select required value={value} onChange={fun}><option value="">Selecione a RA do pet</option>{RAS.map(ra=><option key={ra} value={ra}>{ra}</option>)}</select></label></div><label>Bairro / setor (opcional)<input maxLength={80} value={form.neighborhood} onChange={e=>setForm({...form,neighborhood:e.target.value})} placeholder="Ex.: P Sul, QNM, Ceilândia Sul"/></label>
      <label>Raça <input maxLength={80} list="breed-suggestions" value={form.breed} onChange={e=>setForm({...form,breed:e.target.value})} placeholder="Ex.: Sem raça definida (SRD)"/><datalist id="breed-suggestions"><option value="Sem raça definida (SRD)"/><option value="Labrador"/><option value="Golden Retriever"/><option value="Pinscher"/><option value="Poodle"/><option value="Pitbull"/><option value="Shih-tzu"/><option value="Vira-lata"/><option value="Siamês"/><option value="Persa"/><option value="Maine Coon"/></datalist></label>
      <label>Cor<select value={form.color} onChange={e=>setForm({...form,color:e.target.value})}><option value="">Selecione</option>{colors.map(c=><option key={c}>{c}</option>)}</select></label>
      <label>Personalidade (selecione várias)</label><div className="trait-grid">{traits.map(t=><button key={t} type="button" className={traitList.includes(t)?'chosen':''} onClick={()=>setTraitList(a=>a.includes(t)?a.filter(x=>x!==t):[...a,t])}>{t}</button>)}</div>
      <div className="geo-pet"><button type="button" disabled={busy} className="secondary geo-button" onClick={getPetApproxLocation}><MapPin size={16}/> Usar localização aproximada do pet</button>{petCoords&&<><span className="geo-display">Coordenadas aproximadas: {petCoords.lat.toFixed(2)}, {petCoords.lng.toFixed(2)}</span><button type="button" className="pet-mini-action" onClick={()=>setPetCoords(null)}><X size={15}/> Remover localização</button></>}<small>Opcional. Compartilhe somente uma localização próxima da região do animal, nunca o endereço de uma casa ou abrigo sensível. Precisão reduzida para cerca de 1 km.</small></div>
      <label>Conte a história do pet *<textarea required minLength={20} maxLength={2000} rows={4} value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="Saúde, sociabilidade, necessidades especiais, história e cuidados..."/></label>
-     <label className="upload-label"><ImagePlus size={21}/> Foto (JPG, PNG ou WebP, até 5 MB)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>setPhoto(e.target.files?.[0]??null)}/></label>
+     <div className="photos-editor"><label className="upload-label"><ImagePlus size={21}/> Fotos do pet (até 5 imagens, 5 MB cada)<input type="file" multiple accept="image/png,image/jpeg,image/webp" disabled={existingPhotos.length+photos.length>=5} onChange={e=>{const incoming=Array.from(e.target.files||[]);if(incoming.some(file=>!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>5*1024*1024)){setMessage('Aceitamos JPG, PNG ou WebP com até 5 MB por foto.');e.target.value='';return}if(existingPhotos.length+photos.length+incoming.length>5){setMessage('Máximo de 5 fotos ao todo.');e.target.value='';return}setPhotos(a=>[...a,...incoming]);setMessage('');e.target.value=''}}/></label><small>{existingPhotos.length+photos.length}/5 fotos selecionadas. A primeira será a capa. Você pode remover fotos antes de salvar.</small><div className="photo-preview">{existingPhotos.map((url,i)=><div className="photo-tile" key={url}><img src={url} alt={'Foto atual '+(i+1)}/><button type="button" aria-label="Remover foto" onClick={()=>setExistingPhotos(a=>a.filter(x=>x!==url))}><X size={15}/></button>{i===0&&<span>Capa</span>}</div>)}{photos.map((file,i)=><div className="photo-tile" key={file.name+'-'+i}><span className="new-photo"><ImagePlus size={20}/>{file.name}</span><button type="button" aria-label="Remover foto nova" onClick={()=>setPhotos(a=>a.filter((_,idx)=>idx!==i))}><X size={15}/></button></div>)}</div></div>
      <button disabled={busy} className="primary wide">{busy?'Salvando...':editingPet?'Salvar alterações do pet':'Publicar pet para adoção'} <PawPrint size={17}/></button>
     </form>}
     <div className="owned-list">{pets.map(p=><article key={p.id}><div className="owned-thumb">{p.image_url?<img src={p.image_url} alt={p.name}/>:<PawPrint/>}</div><div className="owned-info"><h3>{p.name}</h3><p>{p.species} · {p.breed||'SRD'} · {p.age_label} · {p.district}</p><span>{p.status==='available'?'Disponível':p.status==='reserved'?'Em processo de adoção':'Adotado'}</span><div><button className="pet-mini-action" onClick={()=>editPet(p)}><Pencil size={14}/> Editar pet</button></div></div><select disabled={busy} aria-label={'Situação de '+p.name} value={p.status} onChange={e=>setStatus(p,e.target.value as PetListing['status'])}><option value="available">Disponível</option><option value="reserved">Reservado</option><option value="adopted">Adotado</option></select></article>)}{pets.length===0&&<div className="empty"><Trash2 size={28}/><p>Nenhum pet publicado ainda.</p></div>}</div>
