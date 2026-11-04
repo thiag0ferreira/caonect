@@ -72,7 +72,7 @@ begin
   where pet_id=v_request.pet_id and id<>p_request_id
     and status in ('pending','in_review','approved');
  perform set_config('caonect.finalizing_adoption','',true);
-end $;
+end $$;
 revoke all on function public.caonect_complete_adoption(uuid) from public,anon;
 grant execute on function public.caonect_complete_adoption(uuid) to authenticated;
 
