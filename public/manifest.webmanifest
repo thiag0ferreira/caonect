@@ -1,15 +1,35 @@
 {
-  "name": "Cãonect — Adoção de Pets",
+  "id": "/",
+  "name": "Cãonect — Encontros que viram família",
   "short_name": "Cãonect",
-  "description": "Encontros que viram família",
-  "start_url": "./",
-  "scope": "./",
+  "description": "Encontros que viram família. Encontre cães e gatos para adoção responsável no Distrito Federal.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#FAF7F2",
-  "theme_color": "#264D45",
+  "background_color": "#F7F4EE",
+  "theme_color": "#285B4E",
   "icons": [
     {
-      "src": "favicon.svg",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/app-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
