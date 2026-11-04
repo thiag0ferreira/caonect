@@ -25,7 +25,7 @@ export default function CommunityPets({mode='explore',query='',location='',speci
  const [geoError,setGeoError]=useState('')
  useEffect(()=>{if(!supabase)return;let live=true
  const client=supabase
- client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,neighborhood,photo_urls,color,breed,animal_category,review_status,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').order('created_at',{ascending:false}).limit(100)
+ client.from('pets').select('*').eq('status','available').order('created_at',{ascending:false}).limit(100)
   .then(({data,error})=>{if(live){if(error)setError('Falha ao carregar pets. '+error.message);else{setPets((data||[]) as PetListing[]);setError('')}}})
  return()=>{live=false}
  },[refresh])
