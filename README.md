@@ -267,3 +267,43 @@ Identidade aprovada: logo de cão + gato + coração, slogan **Encontros que vir
 A instalação via PWA funciona em plataformas compatíveis. O Cãonect ainda **não oferece modo offline para mensagens, pets ou autenticação**: esses recursos exigem internet. Splash nativa de Android/iOS pode variar segundo plataforma e versão do sistema. Imagens de compartilhamento são atualizadas conforme o cache das plataformas.
 
 Para substituir futuramente a marca vetorizada por um arquivo mestre de imagem, preserve o nome `brand-logo.svg` e as dimensões para não afetar o layout.
+
+
+## DIFF 006.1 — Cãonect Multiespécies (DF)
+
+A expansão inicial permite preparar anúncios de cães, gatos, aves, pequenos mamíferos,
+répteis, peixes/aquáticos e outros. Cada categoria tem espécies pré-definidas; é
+necessário implementar formulários veterinários próprios no DIFF 006.2.
+
+**ATENÇÃO: execute primeiro o arquivo**
+[`supabase/diff-0061-multiespecies.sql`](supabase/diff-0061-multiespecies.sql)
+no SQL Editor do projeto `caonect`. É um script transacional que não apaga
+os registros existentes.
+
+- Cães e gatos já cadastrados continuam disponíveis e são classificados.
+- Novas espécies ficam em **revisão pendente**, sem exibição pública.
+- A moderação não possui painel de aprovação neste DIFF. Não altere manualmente
+  o campo de revisão para aceitar animais de origem desconhecida.
+- Ao escolher a categoria no cadastro, a lista de espécies muda. Para categorias
+  regulamentadas, solicita informações gerais sobre origem e documentação,
+  mas NÃO é permitido colocar CPF, endereço ou dados sensíveis no campo.
+- A página inicial oferece navegação por categoria e Explorar filtra por categoria.
+- O Match continua restrito a cães e gatos até receber critérios próprios.
+- Nenhum botão de pagamento, cobrança recorrente, campanha ou doação foi ativado.
+
+Referência: regulação e orientação do Brasília Ambiental para fauna exótica,
+incluindo origem legal, transferências e restrições de detentores de TGAE.
+A categoria "Outros" não concede permissão de anúncio: exige avaliação.
+
+### Testes após SQL e GitHub Actions
+1. Perfil de protetor: confirmar que Batata e Amarelo mantêm suas fotos e status.
+2. Abrir novo cadastro e alternar Cachorros, Aves, Pequenos mamíferos e Répteis.
+3. Cadastrar um animal **de teste, sem dados pessoais**, numa nova categoria;
+   confirmar que aparece **Aguardando revisão** apenas no perfil.
+4. Na navegação anônima, confirmar que o anúncio pendente não aparece.
+5. Confirmar que o filtro de Cachorros continua exibindo os pets existentes.
+6. O chat e adoções anteriores não devem ser alterados.
+
+### Monetização futura
+Consulte [`docs/monetizacao.md`](docs/monetizacao.md).
+O projeto segue gratuito neste DIFF.
