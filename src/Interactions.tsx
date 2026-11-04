@@ -1,11 +1,12 @@
 import {useEffect,useState,type FormEvent} from 'react'
-import {Heart,MessageCircle,Send,ShieldCheck,ArrowLeft} from 'lucide-react'
+import {Heart,MessageCircle,Send,ShieldCheck,ArrowLeft,MapPin,UserRound,Users,LockKeyhole} from 'lucide-react'
 import {supabase,type PetListing} from './supabase'
 import type {User} from '@supabase/supabase-js'
 import './interactions.css'
 
 export type AdoptionRequest={id:string;pet_id:string;adopter_id:string;owner_id:string;intent:'question'|'adoption';status:'pending'|'in_review'|'approved'|'rejected'|'cancelled';created_at:string}
 type Message={id:string;request_id:string;sender_id:string;body:string;created_at:string}
+type Participant={user_id:string;display_name:string;role:'adopter'|'protector'|'ngo';district:string;neighborhood:string;city:string}
 export function useCurrentUser(){
  const [user,setUser]=useState<User|null>(null)
  useEffect(()=>{if(!supabase)return;const client=supabase;let live=true;client.auth.getUser().then(r=>{if(live)setUser(r.data.user)});const {data:{subscription}}=client.auth.onAuthStateChange((_e,s)=>setUser(s?.user??null));return()=>{live=false;subscription.unsubscribe()}},[])
@@ -47,6 +48,8 @@ export function Conversations({user,onLogin}:{user:User|null;onLogin:()=>void}){
  const [selected,setSelected]=useState<AdoptionRequest|null>(null)
  const [messages,setMessages]=useState<Message[]>([])
  const [pets,setPets]=useState<Record<string,PetListing>>({})
+ const [participants,setParticipants]=useState<Participant[]>([])
+ const [participantError,setParticipantError]=useState('')
  const [draft,setDraft]=useState('')
  const [busy,setBusy]=useState(false)
  const [error,setError]=useState('')
@@ -61,6 +64,19 @@ export function Conversations({user,onLogin}:{user:User|null;onLogin:()=>void}){
   )
   return()=>{live=false}
  },[user,refresh])
+ useEffect(()=>{
+  if(!supabase||!selected){setParticipants([]);setParticipantError('');return}
+  let active=true
+  setParticipants([]);setParticipantError('')
+  supabase.rpc('caonect_conversation_people',{p_request_id:selected.id}).then(({data,error})=>{
+    if(!active)return
+    if(error){setParticipantError('Os dados dos participantes serão liberados após executar a migração DIFF 003.1 no Supabase.');return}
+    setParticipants((data||[]) as Participant[])
+  })
+  return()=>{active=false}
+ },[selected])
+ const roleName=(role:Participant['role'])=>role==='ngo'?'ONG':role==='protector'?'Protetor independente':'Adotante'
+ const locationLabel=(p:Participant)=>[p.neighborhood,p.district,p.city||'Brasília'].filter(Boolean).join(' · ')
  useEffect(()=>{if(!supabase||!selected)return;let live=true
   const load=()=>supabase!.from('adoption_messages').select('*').eq('request_id',selected.id).order('created_at',{ascending:true}).then(({data,error})=>{if(live){if(error)setError(error.message);else setMessages((data||[]) as Message[])}})
   load();const t=setInterval(load,7000);return()=>{live=false;clearInterval(t)}
@@ -73,7 +89,23 @@ export function Conversations({user,onLogin}:{user:User|null;onLogin:()=>void}){
  const changeStatus=async(value:AdoptionRequest['status'])=>{if(!supabase||!selected)return;setBusy(true);const {error}=await supabase.from('adoption_requests').update({status:value}).eq('id',selected.id);if(error)setError(error.message);else{setSelected({...selected,status:value});setRefresh(x=>x+1)}setBusy(false)}
  if(!user)return <section className="section page"><h1>Minhas conversas e adoções</h1><div className="empty"><Heart size={36}/><p>Entre na sua conta para conversar com protetores e acompanhar suas solicitações.</p><button className="primary" onClick={onLogin}>Entrar ou cadastrar</button></div></section>
  return <section className="section page"><span className="kicker">UMA NOVA HISTÓRIA COMEÇA AQUI</span><h1>Conversas e adoções</h1><p>Converse com segurança pelo Cãonect. Evite compartilhar documentos, telefones e endereços antes de verificar o responsável.</p>{error&&<p className="portal-notice" role="alert">{error}</p>}
-  {selected?<div className="chat-box"><div className="chat-header"><button onClick={()=>{setSelected(null);setMessages([])}}><ArrowLeft size={20}/></button><div><strong>{pets[selected.pet_id]?.name||'Pet'}</strong><small> {selected.status==='pending'?'Pendente':selected.status==='in_review'?'Em análise':selected.status==='approved'?'Aprovada':selected.status==='rejected'?'Recusada':'Cancelada'}</small></div></div>
+  {selected?<div className="chat-box"><div className="chat-header"><button aria-label="Voltar às conversas" onClick={()=>{setSelected(null);setMessages([])}}><ArrowLeft size={20}/></button><div><strong>{pets[selected.pet_id]?.name||'Pet'}</strong><small> {selected.status==='pending'?'Pendente':selected.status==='in_review'?'Em análise':selected.status==='approved'?'Aprovada':selected.status==='rejected'?'Recusada':'Cancelada'}</small></div></div>
+   <div className="chat-participants">
+    <div className="chat-pet-summary"><span className="chat-pet-icon">{pets[selected.pet_id]?.image_url?<img src={pets[selected.pet_id].image_url!} alt="" />:<Users size={24}/>}</span><div><strong>Conversa sobre {pets[selected.pet_id]?.name||'o animal'}</strong><small>{pets[selected.pet_id]?.breed||'Pet'} · {pets[selected.pet_id]?.district||'Distrito Federal'}</small></div></div>
+    {participantError&&<p role="status" className="portal-notice">{participantError}</p>}
+    <div className="chat-people-grid">
+    {(['owner','adopter'] as const).map(kind=>{
+      const id=kind==='owner'?selected.owner_id:selected.adopter_id
+      const p=participants.find(x=>x.user_id===id)
+      return <div key={kind} className="chat-person">
+       <div className="chat-person-avatar"><UserRound size={21}/></div>
+       <div><span className="chat-person-role">{kind==='owner'?'RESPONSÁVEL PELO PET':'INTERESSADO NA ADOÇÃO'}</span><strong>{p?.display_name||'Dados disponíveis após atualização'}</strong><small>{p?roleName(p.role):kind==='owner'?'Protetor ou ONG':'Adotante'}</small>
+       {p&&<small className="chat-person-location"><MapPin size={13}/>{locationLabel(p)||'Distrito Federal'}</small>}</div>
+       {id===user.id&&<span className="chat-me">Você</span>}
+      </div>
+    })}
+    </div><p className="chat-privacy"><LockKeyhole size={14}/> Somente participantes desta conversa podem visualizar esses dados. Telefone, e-mail e endereço não são exibidos.</p>
+   </div>
    <div className="chat-messages">{messages.length===0&&<p className="chat-empty">A conversa começa aqui. Conte um pouco sobre seu interesse e tire suas dúvidas.</p>}{messages.map(m=><div key={m.id} className={'bubble '+(m.sender_id===user.id?'mine':'theirs')}><p>{m.body}</p><small>{new Date(m.created_at).toLocaleString('pt-BR')}</small></div>)}</div>
    {selected.owner_id===user.id&&<div className="chat-status"><label>Andamento da solicitação <select value={selected.status} disabled={busy} onChange={e=>changeStatus(e.target.value as AdoptionRequest['status'])}><option value="pending">Pendente</option><option value="in_review">Em análise</option><option value="approved">Aprovada</option><option value="rejected">Recusada</option><option value="cancelled">Cancelada</option></select></label></div>}
    {selected.status==='rejected'||selected.status==='cancelled'?<p className="chat-notice">Conversa encerrada.</p>:<form className="chat-compose" onSubmit={send}><input value={draft} onChange={e=>setDraft(e.target.value)} maxLength={2000} placeholder="Escreva uma mensagem..." aria-label="Mensagem"/><button type="submit" className="primary" disabled={busy||!draft.trim()}><Send size={18}/> Enviar</button></form>}
