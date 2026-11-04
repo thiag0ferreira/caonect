@@ -24,3 +24,17 @@ html,body,#root{min-height:100%;width:100%}
  .bottom-nav small{font-size:8px}
  .bottom-nav svg{width:18px;height:18px}
 }
+
+/* DIFF 005 — identidade visual original e PWA */
+:root{--caonect-green:#285B4E;--caonect-soft:#DCEBE3;--caonect-cream:#F7F4EE;--caonect-brown:#4A2600}
+.brand-icon{width:62px;height:43px;flex-shrink:0;border-radius:0;overflow:visible;display:flex;align-items:center;justify-content:center}
+.brand-icon img{width:100%;height:100%;object-fit:contain;object-position:center}
+.brand strong{color:var(--caonect-green)}
+.footer-brand{display:flex;align-items:center;gap:13px;min-width:0}
+.footer-brand img{width:59px;height:39px;object-fit:contain;filter:brightness(0) invert(1);opacity:.94}
+.app>footer{background:var(--caonect-green)}
+@media(max-width:700px){
+ .brand-icon{width:51px;height:36px}
+ .footer-brand{justify-content:center}
+ .footer-brand img{width:50px;height:35px}
+}
