@@ -4,10 +4,11 @@ import type { User } from '@supabase/supabase-js'
 import { Heart, ShieldCheck, LogIn, LogOut, Plus, PawPrint, Building2, UserRound, ImagePlus, Trash2, Pencil, MapPin, Save, X, MailCheck, Mail, ArrowRight, CheckCircle2 } from 'lucide-react'
 import './portal.css'
 import {CITY,RAS,normalizeRA} from './dfRegions'
+import {ANIMAL_CATEGORIES,categoryForSpecies,speciesForCategory,requiresReview} from './animalCategories'
 
 type Role='adopter'|'protector'|'ngo'
 type Profile={id:string;display_name:string;role:Role;city:string;district:string;neighborhood?:string;phone:string|null}
-const blank={name:'',species:'Cachorro',size:'Médio',age_label:'',city:CITY,district:'',neighborhood:'',color:'',breed:'Sem raça definida (SRD)',description:''}
+const blank={name:'',animal_category:'Cachorros',species:'Cachorro',scientific_name:'',legal_origin_notes:'',size:'Médio',age_label:'',city:CITY,district:'',neighborhood:'',color:'',breed:'Sem raça definida (SRD)',description:''}
 const traits=['Dócil','Tranquilo','Ativo','Afetuoso','Curioso','Explorador','Tímido','Brincalhão','Sociável','Independente','Bagunceiro','Bravo','Territorial','Agitado','Medroso','Assustado','Desconfiado','Ciumento','Teimoso','Protetor','Carente','Fujão','Reativo com outros animais','Não gosta de crianças','Precisa de espaço']
 const colors=['Preto','Cinza','Branco','Chocolate','Creme','Fulvo','Mogno','Dourado','Caramelo','Rajado']
 type Props={onPublished?:()=>void}
@@ -113,7 +114,7 @@ export default function Portal({onPublished}:Props){
   setBusy(false)
  }
  const startNewPet=()=>{setEditingPet(null);setForm(blank);setTraitList([]);setPhotos([]);setExistingPhotos([]);setPetCoords(null);setShowForm(true);setMessage('')}
- const editPet=(p:PetListing)=>{setEditingPet(p.id);setForm({name:p.name,species:p.species,size:p.size,age_label:p.age_label,city:CITY,district:normalizeRA(p.district)||'',neighborhood:p.neighborhood||(!normalizeRA(p.district)?p.district:''),color:p.color,breed:p.breed||'Sem raça definida (SRD)',description:p.description});setExistingPhotos(p.photo_urls?.length?p.photo_urls:(p.image_url?[p.image_url]:[]));setTraitList(p.personality||[]);setPetCoords(p.approximate_lat!=null&&p.approximate_lng!=null?{lat:p.approximate_lat,lng:p.approximate_lng}:null);setPhotos([]);setShowForm(true);setMessage('');setTimeout(()=>document.getElementById('pet-form')?.scrollIntoView({behavior:'smooth',block:'start'}),50)}
+ const editPet=(p:PetListing)=>{setEditingPet(p.id);setForm({name:p.name,animal_category:p.animal_category||categoryForSpecies(p.species),species:p.species,scientific_name:p.scientific_name||'',legal_origin_notes:p.legal_origin_notes||'',size:p.size,age_label:p.age_label,city:CITY,district:normalizeRA(p.district)||'',neighborhood:p.neighborhood||(!normalizeRA(p.district)?p.district:''),color:p.color,breed:p.breed||'Sem raça definida (SRD)',description:p.description});setExistingPhotos(p.photo_urls?.length?p.photo_urls:(p.image_url?[p.image_url]:[]));setTraitList(p.personality||[]);setPetCoords(p.approximate_lat!=null&&p.approximate_lng!=null?{lat:p.approximate_lat,lng:p.approximate_lng}:null);setPhotos([]);setShowForm(true);setMessage('');setTimeout(()=>document.getElementById('pet-form')?.scrollIntoView({behavior:'smooth',block:'start'}),50)}
  const getPetApproxLocation=()=>{
   if(!navigator.geolocation){setMessage('Seu navegador não oferece geolocalização.');return}
   setBusy(true);setMessage('')
@@ -145,7 +146,7 @@ export default function Portal({onPublished}:Props){
   }
   const photo_urls=[...existingPhotos,...newUrls].slice(0,5)
   const image_url=photo_urls[0]||null
-  const payload={name:form.name.trim(),species:form.species,size:form.size,
+  const payload={name:form.name.trim(),species:form.species,animal_category:form.animal_category,scientific_name:form.scientific_name.trim()||null,legal_origin_notes:form.legal_origin_notes.trim(),size:form.size,
     age_label:form.age_label.trim(),city:CITY,district:form.district,neighborhood:form.neighborhood.trim(),
     color:form.color,breed:form.breed.trim()||'Sem raça definida (SRD)',
     approximate_lat:petCoords?.lat??null,approximate_lng:petCoords?.lng??null,
@@ -158,7 +159,7 @@ export default function Portal({onPublished}:Props){
    setMessage('Não foi possível cadastrar: '+error.message)
   }else{
    setPets(a=>editingPet?a.map(p=>p.id===editingPet?data as PetListing:p):[data as PetListing,...a]);setForm(blank);setTraitList([]);setPhotos([]);setExistingPhotos([]);setPetCoords(null);setEditingPet(null)
-   setShowForm(false);setMessage(editingPet?'Dados do pet atualizados.':'Pet cadastrado e publicado com sucesso!');onPublished?.()
+   setShowForm(false);setMessage(editingPet?'Dados do animal atualizados.':requiresReview(form.animal_category)?'Cadastro recebido! Este anúncio precisa de avaliação antes de aparecer publicamente.':'Animal cadastrado e publicado com sucesso!');onPublished?.()
   }
   setBusy(false)
  }
