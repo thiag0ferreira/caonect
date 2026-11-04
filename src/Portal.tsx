@@ -77,7 +77,7 @@ export default function Portal({onPublished}:Props){
   setBusy(false)
  }
  const startNewPet=()=>{setEditingPet(null);setForm(blank);setTraitList([]);setPhotos([]);setExistingPhotos([]);setPetCoords(null);setShowForm(true);setMessage('')}
- const editPet=(p:PetListing)=>{setEditingPet(p.id);setForm({name:p.name,species:p.species,size:p.size,age_label:p.age_label,city:CITY,district:normalizeRA(p.district)||'',neighborhood:p.neighborhood||(!normalizeRA(p.district)?p.district:''),color:p.color,breed:p.breed||'Sem raça definida (SRD)',description:p.description});setExistingPhotos(p.photo_urls?.length?p.photo_urls:(p.image_url?[p.image_url]:[]));setTraitList(p.personality||[]);setPetCoords(p.approximate_lat!=null&&p.approximate_lng!=null?{lat:p.approximate_lat,lng:p.approximate_lng}:null);setPhoto(null);setShowForm(true);setMessage('');setTimeout(()=>document.getElementById('pet-form')?.scrollIntoView({behavior:'smooth',block:'start'}),50)}
+ const editPet=(p:PetListing)=>{setEditingPet(p.id);setForm({name:p.name,species:p.species,size:p.size,age_label:p.age_label,city:CITY,district:normalizeRA(p.district)||'',neighborhood:p.neighborhood||(!normalizeRA(p.district)?p.district:''),color:p.color,breed:p.breed||'Sem raça definida (SRD)',description:p.description});setExistingPhotos(p.photo_urls?.length?p.photo_urls:(p.image_url?[p.image_url]:[]));setTraitList(p.personality||[]);setPetCoords(p.approximate_lat!=null&&p.approximate_lng!=null?{lat:p.approximate_lat,lng:p.approximate_lng}:null);setPhotos([]);setExistingPhotos([]);setShowForm(true);setMessage('');setTimeout(()=>document.getElementById('pet-form')?.scrollIntoView({behavior:'smooth',block:'start'}),50)}
  const getPetApproxLocation=()=>{
   if(!navigator.geolocation){setMessage('Seu navegador não oferece geolocalização.');return}
   setBusy(true);setMessage('')
@@ -121,7 +121,7 @@ export default function Portal({onPublished}:Props){
    if(uploadedPaths.length)await client.storage.from('pet-images').remove(uploadedPaths)
    setMessage('Não foi possível cadastrar: '+error.message)
   }else{
-   setPets(a=>editingPet?a.map(p=>p.id===editingPet?data as PetListing:p):[data as PetListing,...a]);setForm(blank);setTraitList([]);setPhoto(null);setPetCoords(null);setEditingPet(null)
+   setPets(a=>editingPet?a.map(p=>p.id===editingPet?data as PetListing:p):[data as PetListing,...a]);setForm(blank);setTraitList([]);setPhotos([]);setExistingPhotos([]);setPetCoords(null);setEditingPet(null)
    setShowForm(false);setMessage(editingPet?'Dados do pet atualizados.':'Pet cadastrado e publicado com sucesso!');onPublished?.()
   }
   setBusy(false)
