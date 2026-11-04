@@ -38,3 +38,15 @@ html,body,#root{min-height:100%;width:100%}
  .footer-brand{justify-content:center}
  .footer-brand img{width:50px;height:35px}
 }
+
+/* DIFF 006.1 — categorias multiespécies */
+.animal-categories{padding-top:36px;padding-bottom:46px}
+.animal-categories h2{color:#285B4E;margin:8px 0 22px}
+.animal-categories>small{display:block;margin-top:13px;font-size:12px;color:#6e8779}
+.category-buttons{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px}
+.category-buttons button{display:flex;min-height:106px;align-items:center;justify-content:center;flex-direction:column;gap:12px;border:1px solid #d9e5db;border-radius:16px;background:#fff;color:#285B4E;padding:13px 8px;transition:background .2s,border-color .2s}
+.category-buttons button:hover,.category-buttons button:focus-visible{background:#eaf4ed;border-color:#6e9c85}
+.category-buttons button span{font-size:29px;line-height:1}
+.category-buttons button strong{font-size:12px;text-align:center;line-height:1.35}
+@media(max-width:900px){.category-buttons{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:500px){.category-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.category-buttons button{min-height:92px}}
