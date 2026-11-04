@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { supabase, isBackendReady, type PetListing } from './supabase'
 import type { User } from '@supabase/supabase-js'
-import { Heart, ShieldCheck, LogIn, LogOut, Plus, PawPrint, Building2, UserRound, ImagePlus, Trash2, Pencil, MapPin, Save, X } from 'lucide-react'
+import { Heart, ShieldCheck, LogIn, LogOut, Plus, PawPrint, Building2, UserRound, ImagePlus, Trash2, Pencil, MapPin, Save, X, MailCheck, Mail, ArrowRight, CheckCircle2 } from 'lucide-react'
 import './portal.css'
 import {CITY,RAS,normalizeRA} from './dfRegions'
 
@@ -18,6 +18,9 @@ export default function Portal({onPublished}:Props){
  const [busy,setBusy]=useState(false)
  const [message,setMessage]=useState('')
  const [mode,setMode]=useState<'login'|'signup'>('signup')
+ const [pendingEmail,setPendingEmail]=useState<string|null>(null)
+ const [resendBusy,setResendBusy]=useState(false)
+ const [resendFeedback,setResendFeedback]=useState('')
  const [email,setEmail]=useState('')
  const [password,setPassword]=useState('')
  const [fullName,setFullName]=useState('')
@@ -54,20 +57,39 @@ export default function Portal({onPublished}:Props){
   ]).then(([p,l])=>{if(active){if(p.error)setMessage('Erro ao carregar perfil: '+p.error.message);setProfile(p.data as Profile|null);if(p.data)setProfileFields({display_name:p.data.display_name||'',city:p.data.city||'',district:normalizeRA(p.data.district||'')||'',neighborhood:p.data.neighborhood||(!normalizeRA(p.data.district||'')?p.data.district||'':''),phone:p.data.phone||''});setPets((l.data??[]) as PetListing[])}})
   return()=>{active=false}
  },[user])
+ const clearSignup=()=>{
+  setEmail('');setPassword('');setFullName('');setRole('adopter');setDistrict('');setSignupNeighborhood('')
+ }
+ const goToLogin=()=>{setPendingEmail(null);setResendFeedback('');setMessage('');setMode('login');setPassword('')}
  const auth=async(e:FormEvent)=>{
   e.preventDefault();if(!supabase)return
   setBusy(true);setMessage('')
-  const client=supabase
-  if(mode==='signup'){
-   const {data,error}=await client.auth.signUp({email,password,options:{data:{display_name:fullName.trim(),role,city:CITY,district:district.trim(),neighborhood:signupNeighborhood.trim()}}})
-   if(error)setMessage(error.message)
-   else if(data.session){setUser(data.user);setMessage('Conta criada! Bem-vindo(a).')}
-   else setMessage('Cadastro recebido. Confira seu e-mail para confirmar a conta. Depois entre com sua senha.')
-  }else{
-   const {error}=await client.auth.signInWithPassword({email,password})
-   if(error)setMessage('Não foi possível entrar: '+error.message)
-  }
-  setBusy(false)
+  try{
+   const client=supabase
+   if(mode==='signup'){
+    const registeredEmail=email.trim().toLowerCase()
+    const {data,error}=await client.auth.signUp({email:registeredEmail,password,options:{data:{display_name:fullName.trim(),role,city:CITY,district:district.trim(),neighborhood:signupNeighborhood.trim()}}})
+    if(error)setMessage('Não foi possível concluir o cadastro: '+error.message)
+    else if(data.session){clearSignup();setPendingEmail(null);setUser(data.user);setMessage('Conta criada! Bem-vindo(a) ao Cãonect.')}
+    else{
+     clearSignup()
+     setPendingEmail(registeredEmail)
+     setResendFeedback('')
+    }
+   }else{
+    const {error}=await client.auth.signInWithPassword({email:email.trim(),password})
+    if(error)setMessage('Não foi possível entrar: '+error.message)
+    else setPassword('')
+   }
+  }catch{setMessage('Ocorreu um problema de conexão. Tente novamente.')}
+  finally{setBusy(false)}
+ }
+ const resendConfirmation=async()=>{
+  if(!supabase||!pendingEmail)return
+  setResendBusy(true);setResendFeedback('')
+  const {error}=await supabase.auth.resend({type:'signup',email:pendingEmail})
+  setResendFeedback(error?'Não foi possível reenviar agora. Aguarde e tente novamente.':'Se o endereço estiver apto a receber confirmação, um novo e-mail será enviado. Verifique a caixa de entrada e o spam.')
+  setResendBusy(false)
  }
  const saveProfile=async(e:FormEvent)=>{
   e.preventDefault();if(!supabase||!user||!profile)return
@@ -144,10 +166,22 @@ export default function Portal({onPublished}:Props){
   <p>Seja a conexão que transforma uma vida.</p>
   {!isBackendReady&&<div className="portal-alert"><ShieldCheck size={21}/><div><strong>Modo de demonstração — Supabase ainda não conectado.</strong><p>O projeto foi publicado sem chaves ou banco. Cadastros reais ficam desativados até configurarmos as variáveis do Supabase no GitHub.</p></div></div>}
   {message&&<div role="status" className="portal-notice">{message}</div>}
-  {!user&&<div className="portal-auth">
+  {!user&&pendingEmail&&<div className="signup-success" role="status">
+    <div className="signup-success-icon"><MailCheck size={36}/></div>
+    <span className="kicker">SÓ FALTA UM PASSO</span>
+    <h2>Confira seu e-mail! 💚</h2>
+    <p>Recebemos sua solicitação de cadastro no Cãonect. Se o endereço estiver elegível, você receberá um link para confirmar sua conta.</p>
+    <div className="signup-email"><Mail size={18}/><strong>{pendingEmail.replace(/^(.{2}).*(@.*)$/, '$1••••$2')}</strong></div>
+    <div className="signup-success-steps"><div><CheckCircle2 size={20}/><span>Verifique sua caixa de entrada e a pasta de spam.</span></div><div><CheckCircle2 size={20}/><span>Clique no link de confirmação enviado pelo Cãonect.</span></div><div><CheckCircle2 size={20}/><span>Volte aqui para entrar e conhecer os animais.</span></div></div>
+    <button type="button" className="primary" onClick={goToLogin}>Já confirmei. Quero entrar <ArrowRight size={18}/></button>
+    <button type="button" className="signup-resend" disabled={resendBusy} onClick={resendConfirmation}>{resendBusy?'Solicitando novo e-mail...':'Não recebi o e-mail. Reenviar confirmação'}</button>
+    {resendFeedback&&<p role="status" className="portal-notice">{resendFeedback}</p>}
+    <p className="signup-success-help">Usou um e-mail diferente? <button type="button" onClick={()=>{setPendingEmail(null);setResendFeedback('');setMode('signup')}}>Refazer cadastro</button></p>
+   </div>}
+  {!user&&!pendingEmail&&<div className="portal-auth">
    <div className="portal-welcome"><PawPrint size={48}/><h2>Todo pet merece encontrar seu lar.</h2><p>Crie uma conta para adotar, proteger ou divulgar animais. A adoção é gratuita.</p><div className="portal-features"><span>♡ Adoção responsável</span><span>✓ Perfis de protetores e ONGs</span><span>⌂ Começando pelo Distrito Federal</span></div></div>
    <div className="portal-panel">
-    <div className="portal-tabs"><button className={mode==='signup'?'selected':''} onClick={()=>setMode('signup')}>Criar conta</button><button className={mode==='login'?'selected':''} onClick={()=>setMode('login')}>Entrar</button></div>
+    <div className="portal-tabs"><button type="button" className={mode==='signup'?'selected':''} onClick={()=>{setMode('signup');setMessage('')}}>Criar conta</button><button type="button" className={mode==='login'?'selected':''} onClick={()=>{setMode('login');setMessage('')}}>Entrar</button></div>
     <form onSubmit={auth} className="portal-form">
     {mode==='signup'&&<>
      <label>Como você deseja participar?</label>
@@ -158,7 +192,7 @@ export default function Portal({onPublished}:Props){
     <label>E-mail<input type="email" required autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@exemplo.com"/></label>
     <label>Senha<input type="password" required minLength={8} autoComplete={mode==='signup'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo de 8 caracteres"/></label>
     <button className="primary wide" disabled={!isBackendReady||busy}>{busy?'Processando...':mode==='signup'?'Criar minha conta':'Entrar na minha conta'}<LogIn size={17}/></button>
-    <small>Não use dados pessoais reais enquanto o Supabase não estiver configurado. Ao disponibilizar cadastros, será necessária uma política de privacidade.</small>
+    <small>Seus dados serão utilizados para a sua conta e interações de adoção. A política de privacidade será disponibilizada antes do lançamento público.</small>
     </form>
    </div>
   </div>}
