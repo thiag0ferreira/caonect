@@ -24,7 +24,7 @@ function App(){
  const go=(p:Page)=>{setPage(p);setMenu(false);window.scrollTo({top:0,behavior:'smooth'})}
  const cardProps={user,onLogin:()=>go('Perfil'),onChat:()=>go('Adoções')}
  const selectCity=(value:string)=>{setCityFilter(value);setLocation('')}
- const exploreMatch=(petName:string)=>{setQuery(petName);setLocation('');setSpecies('Todos');setSize('Todos');go('Explorar')}
+ const exploreMatch=(petName:string,city?:string)=>{setQuery(petName);setCityFilter(city||'Todas');setLocation('');setSpecies('Todos');setSize('Todos');go('Explorar')}
  return <div className="app">
  <header className="header"><div className="header-inner"><button className="brand" onClick={()=>go('Início')}><span className="brand-icon"><img src={import.meta.env.BASE_URL+'brand-logo.svg'} alt="Cãonect"/></span><span><strong>Cãonect</strong><small>Encontros que viram família</small></span></button><nav className="desktop-nav">{nav.map(n=><button key={n.name} className={page===n.name?'active':''} onClick={()=>go(n.name)}>{n.name}</button>)}</nav><button className="header-help" onClick={()=>go('Perfil')}>{user?'Minha conta':'Quero ajudar'} <Heart size={16}/></button><button className="menu-toggle" onClick={()=>setMenu(!menu)} aria-label="Abrir menu">{menu?<X/>:<Menu/>}</button></div>{menu&&<nav className="mobile-drop">{nav.map(n=><button key={n.name} onClick={()=>go(n.name)}>{n.name}</button>)}</nav>}</header>
  <main>
