@@ -23,3 +23,22 @@ alter table public.pets alter column city set default 'Brasília';
 -- isso evita exclusão acidental de conteúdo ainda referenciado.
 -- Para produção: implementar limpeza de arquivos órfãos e validação
 -- de propriedade das URLs no servidor. A RLS existente permanece ativa.
+
+-- Os novos cadastros também armazenam o bairro/setor opcional.
+create or replace function public.handle_new_caonect_user()
+returns trigger language plpgsql security definer set search_path = ''
+as $$
+begin
+ insert into public.profiles(id,display_name,role,city,district,neighborhood)
+ values (
+  new.id,
+  left(coalesce(new.raw_user_meta_data->>'display_name',''),100),
+  case when new.raw_user_meta_data->>'role' in ('adopter','protector','ngo')
+    then new.raw_user_meta_data->>'role' else 'adopter' end,
+  'Brasília',
+  left(coalesce(new.raw_user_meta_data->>'district',''),80),
+  left(coalesce(new.raw_user_meta_data->>'neighborhood',''),80)
+ )
+ on conflict(id) do nothing;
+ return new;
+end $$;
