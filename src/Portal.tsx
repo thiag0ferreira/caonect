@@ -21,6 +21,7 @@ export default function Portal({onPublished}:Props){
  const [pendingEmail,setPendingEmail]=useState<string|null>(null)
  const [resendBusy,setResendBusy]=useState(false)
  const [resendFeedback,setResendFeedback]=useState('')
+ const [authNotice,setAuthNotice]=useState('')
  const [email,setEmail]=useState('')
  const [password,setPassword]=useState('')
  const [fullName,setFullName]=useState('')
@@ -40,6 +41,16 @@ export default function Portal({onPublished}:Props){
  const [petCoords,setPetCoords]=useState<{lat:number;lng:number}|null>(null)
  const [editingProfile,setEditingProfile]=useState(false)
  const [profileFields,setProfileFields]=useState({display_name:'',city:CITY,district:'',neighborhood:'',phone:''})
+ useEffect(()=>{
+  const fragment=new URLSearchParams(window.location.hash.slice(1))
+  const query=new URLSearchParams(window.location.search)
+  const err=fragment.get('error_description')||query.get('error_description')
+  if(err){
+   setAuthNotice('Não foi possível concluir a confirmação: '+err.replace(/\+/g,' '))
+  }else if(fragment.has('access_token')||query.has('code')){
+   setAuthNotice('Confirmação recebida. Você pode acessar sua conta normalmente.')
+  }
+ },[])
  useEffect(()=>{
   if(!supabase)return
   const client=supabase
@@ -68,7 +79,7 @@ export default function Portal({onPublished}:Props){
    const client=supabase
    if(mode==='signup'){
     const registeredEmail=email.trim().toLowerCase()
-    const {data,error}=await client.auth.signUp({email:registeredEmail,password,options:{data:{display_name:fullName.trim(),role,city:CITY,district:district.trim(),neighborhood:signupNeighborhood.trim()}}})
+    const {data,error}=await client.auth.signUp({email:registeredEmail,password,options:{emailRedirectTo:new URL(import.meta.env.BASE_URL,window.location.origin).toString(),data:{display_name:fullName.trim(),role,city:CITY,district:district.trim(),neighborhood:signupNeighborhood.trim()}}})
     if(error)setMessage('Não foi possível concluir o cadastro: '+error.message)
     else if(data.session){clearSignup();setPendingEmail(null);setUser(data.user);setMessage('Conta criada! Bem-vindo(a) ao Cãonect.')}
     else{
@@ -87,7 +98,7 @@ export default function Portal({onPublished}:Props){
  const resendConfirmation=async()=>{
   if(!supabase||!pendingEmail)return
   setResendBusy(true);setResendFeedback('')
-  const {error}=await supabase.auth.resend({type:'signup',email:pendingEmail})
+  const {error}=await supabase.auth.resend({type:'signup',email:pendingEmail,options:{emailRedirectTo:new URL(import.meta.env.BASE_URL,window.location.origin).toString()}})
   setResendFeedback(error?'Não foi possível reenviar agora. Aguarde e tente novamente.':'Se o endereço estiver apto a receber confirmação, um novo e-mail será enviado. Verifique a caixa de entrada e o spam.')
   setResendBusy(false)
  }
@@ -165,6 +176,7 @@ export default function Portal({onPublished}:Props){
   <h1>Meu espaço no Cãonect</h1>
   <p>Seja a conexão que transforma uma vida.</p>
   {!isBackendReady&&<div className="portal-alert"><ShieldCheck size={21}/><div><strong>Modo de demonstração — Supabase ainda não conectado.</strong><p>O projeto foi publicado sem chaves ou banco. Cadastros reais ficam desativados até configurarmos as variáveis do Supabase no GitHub.</p></div></div>}
+  {authNotice&&<div role="status" className="portal-notice">{authNotice}</div>}
   {message&&<div role="status" className="portal-notice">{message}</div>}
   {!user&&pendingEmail&&<div className="signup-success" role="status">
     <div className="signup-success-icon"><MailCheck size={36}/></div>
