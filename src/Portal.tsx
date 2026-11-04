@@ -5,10 +5,11 @@ import { Heart, ShieldCheck, LogIn, LogOut, Plus, PawPrint, Building2, UserRound
 import './portal.css'
 import {CITY,RAS,normalizeRA} from './dfRegions'
 import {ANIMAL_CATEGORIES,categoryForSpecies,speciesForCategory,requiresReview} from './animalCategories'
+import {SUPPORTED_CITIES,stateForCity,districtLabel,neighborhoodLabel,normalizeDistrict,DEFAULT_CITY} from './supportedLocations'
 
 type Role='adopter'|'protector'|'ngo'
 type Profile={id:string;display_name:string;role:Role;city:string;district:string;neighborhood?:string;phone:string|null}
-const blank={name:'',animal_category:'Cachorros',species:'Cachorro',scientific_name:'',legal_origin_notes:'',size:'Médio',age_label:'',city:CITY,district:'',neighborhood:'',color:'',breed:'Sem raça definida (SRD)',description:''}
+const blank={name:'',animal_category:'Cachorros',species:'Cachorro',scientific_name:'',legal_origin_notes:'',size:'Médio',age_label:'',city:DEFAULT_CITY,district:'',neighborhood:'',color:'',breed:'Sem raça definida (SRD)',description:''}
 const traits=['Dócil','Tranquilo','Ativo','Afetuoso','Curioso','Explorador','Tímido','Brincalhão','Sociável','Independente','Bagunceiro','Bravo','Territorial','Agitado','Medroso','Assustado','Desconfiado','Ciumento','Teimoso','Protetor','Carente','Fujão','Reativo com outros animais','Não gosta de crianças','Precisa de espaço']
 const colors=['Preto','Cinza','Branco','Chocolate','Creme','Fulvo','Mogno','Dourado','Caramelo','Rajado']
 type Props={onPublished?:()=>void}
@@ -27,7 +28,7 @@ export default function Portal({onPublished}:Props){
  const [password,setPassword]=useState('')
  const [fullName,setFullName]=useState('')
  const [role,setRole]=useState<Role>('adopter')
- const [city]=useState(CITY)
+ const [city,setCity]=useState<string>(DEFAULT_CITY)
  const [district,setDistrict]=useState('')
  const [signupNeighborhood,setSignupNeighborhood]=useState('')
  const [pets,setPets]=useState<PetListing[]>([])
@@ -66,11 +67,11 @@ export default function Portal({onPublished}:Props){
   Promise.all([
     client.from('profiles').select('id,display_name,role,city,district,neighborhood,phone').eq('id',user.id).maybeSingle(),
     client.from('pets').select('*').eq('owner_id',user.id).order('created_at',{ascending:false})
-  ]).then(([p,l])=>{if(active){if(p.error)setMessage('Erro ao carregar perfil: '+p.error.message);setProfile(p.data as Profile|null);if(p.data)setProfileFields({display_name:p.data.display_name||'',city:p.data.city||'',district:normalizeRA(p.data.district||'')||'',neighborhood:p.data.neighborhood||(!normalizeRA(p.data.district||'')?p.data.district||'':''),phone:p.data.phone||''});setPets((l.data??[]) as PetListing[])}})
+  ]).then(([p,l])=>{if(active){if(p.error)setMessage('Erro ao carregar perfil: '+p.error.message);setProfile(p.data as Profile|null);if(p.data)setProfileFields({display_name:p.data.display_name||'',city:p.data.city||'',district:normalizeDistrict(p.data.city||DEFAULT_CITY,p.data.district||''),neighborhood:p.data.neighborhood||(!normalizeDistrict(p.data.city||DEFAULT_CITY,p.data.district||'')?p.data.district||'':''),phone:p.data.phone||''});setPets((l.data??[]) as PetListing[])}})
   return()=>{active=false}
  },[user])
  const clearSignup=()=>{
-  setEmail('');setPassword('');setFullName('');setRole('adopter');setDistrict('');setSignupNeighborhood('')
+  setEmail('');setPassword('');setFullName('');setRole('adopter');setCity(DEFAULT_CITY);setDistrict('');setSignupNeighborhood('')
  }
  const goToLogin=()=>{setPendingEmail(null);setResendFeedback('');setMessage('');setMode('login');setPassword('')}
  const auth=async(e:FormEvent)=>{
@@ -80,7 +81,7 @@ export default function Portal({onPublished}:Props){
    const client=supabase
    if(mode==='signup'){
     const registeredEmail=email.trim().toLowerCase()
-    const {data,error}=await client.auth.signUp({email:registeredEmail,password,options:{emailRedirectTo:new URL(import.meta.env.BASE_URL,window.location.origin).toString(),data:{display_name:fullName.trim(),role,city:CITY,district:district.trim(),neighborhood:signupNeighborhood.trim()}}})
+    const {data,error}=await client.auth.signUp({email:registeredEmail,password,options:{emailRedirectTo:new URL(import.meta.env.BASE_URL,window.location.origin).toString(),data:{display_name:fullName.trim(),role,city,state:stateForCity(city),district:district.trim(),neighborhood:signupNeighborhood.trim()}}})
     if(error)setMessage('Não foi possível concluir o cadastro: '+error.message)
     else if(data.session){clearSignup();setPendingEmail(null);setUser(data.user);setMessage('Conta criada! Bem-vindo(a) ao Cãonect.')}
     else{
@@ -107,14 +108,14 @@ export default function Portal({onPublished}:Props){
   e.preventDefault();if(!supabase||!user||!profile)return
   if(!profileFields.display_name.trim()||!profileFields.district.trim()){setMessage('Preencha nome, cidade e região.');return}
   setBusy(true);setMessage('')
-  const data={display_name:profileFields.display_name.trim(),city:CITY,district:profileFields.district,neighborhood:profileFields.neighborhood.trim(),phone:profileFields.phone.trim()||null}
+  const data={display_name:profileFields.display_name.trim(),city:profileFields.city,state:stateForCity(profileFields.city),district:profileFields.district,neighborhood:profileFields.neighborhood.trim(),phone:profileFields.phone.trim()||null}
   const {error}=await supabase.from('profiles').update(data).eq('id',user.id)
   if(error)setMessage('Não foi possível salvar o perfil: '+error.message)
   else{setProfile({...profile,...data});setEditingProfile(false);setMessage('Informações pessoais atualizadas.')}
   setBusy(false)
  }
- const startNewPet=()=>{setEditingPet(null);setForm(blank);setTraitList([]);setPhotos([]);setExistingPhotos([]);setPetCoords(null);setShowForm(true);setMessage('')}
- const editPet=(p:PetListing)=>{setEditingPet(p.id);setForm({name:p.name,animal_category:p.animal_category||categoryForSpecies(p.species),species:p.species,scientific_name:p.scientific_name||'',legal_origin_notes:p.legal_origin_notes||'',size:p.size,age_label:p.age_label,city:CITY,district:normalizeRA(p.district)||'',neighborhood:p.neighborhood||(!normalizeRA(p.district)?p.district:''),color:p.color,breed:p.breed||'Sem raça definida (SRD)',description:p.description});setExistingPhotos(p.photo_urls?.length?p.photo_urls:(p.image_url?[p.image_url]:[]));setTraitList(p.personality||[]);setPetCoords(p.approximate_lat!=null&&p.approximate_lng!=null?{lat:p.approximate_lat,lng:p.approximate_lng}:null);setPhotos([]);setShowForm(true);setMessage('');setTimeout(()=>document.getElementById('pet-form')?.scrollIntoView({behavior:'smooth',block:'start'}),50)}
+ const startNewPet=()=>{setEditingPet(null);setForm({...blank,city:profile?.city||DEFAULT_CITY,district:profile?.district||'',neighborhood:profile?.neighborhood||''});setTraitList([]);setPhotos([]);setExistingPhotos([]);setPetCoords(null);setShowForm(true);setMessage('')}
+ const editPet=(p:PetListing)=>{setEditingPet(p.id);setForm({name:p.name,animal_category:p.animal_category||categoryForSpecies(p.species),species:p.species,scientific_name:p.scientific_name||'',legal_origin_notes:p.legal_origin_notes||'',size:p.size,age_label:p.age_label,city:p.city||DEFAULT_CITY,district:normalizeDistrict(p.city||DEFAULT_CITY,p.district)||'',neighborhood:p.neighborhood||(!normalizeDistrict(p.city||DEFAULT_CITY,p.district)?p.district:''),color:p.color,breed:p.breed||'Sem raça definida (SRD)',description:p.description});setExistingPhotos(p.photo_urls?.length?p.photo_urls:(p.image_url?[p.image_url]:[]));setTraitList(p.personality||[]);setPetCoords(p.approximate_lat!=null&&p.approximate_lng!=null?{lat:p.approximate_lat,lng:p.approximate_lng}:null);setPhotos([]);setShowForm(true);setMessage('');setTimeout(()=>document.getElementById('pet-form')?.scrollIntoView({behavior:'smooth',block:'start'}),50)}
  const getPetApproxLocation=()=>{
   if(!navigator.geolocation){setMessage('Seu navegador não oferece geolocalização.');return}
   setBusy(true);setMessage('')
@@ -147,7 +148,7 @@ export default function Portal({onPublished}:Props){
   const photo_urls=[...existingPhotos,...newUrls].slice(0,5)
   const image_url=photo_urls[0]||null
   const payload={name:form.name.trim(),species:form.species,animal_category:form.animal_category,scientific_name:form.scientific_name.trim()||null,legal_origin_notes:form.legal_origin_notes.trim(),size:form.size,
-    age_label:form.age_label.trim(),city:CITY,district:form.district,neighborhood:form.neighborhood.trim(),
+    age_label:form.age_label.trim(),city:form.city,state:stateForCity(form.city),district:form.district,neighborhood:form.neighborhood.trim(),
     color:form.color,breed:form.breed.trim()||(form.animal_category==='Cachorros'||form.animal_category==='Gatos'?'Sem raça definida (SRD)':''),
     approximate_lat:petCoords?.lat??null,approximate_lng:petCoords?.lng??null,
     description:form.description.trim(),personality:traitList,photo_urls,image_url}
@@ -192,7 +193,7 @@ export default function Portal({onPublished}:Props){
     <p className="signup-success-help">Usou um e-mail diferente? <button type="button" onClick={()=>{setPendingEmail(null);setResendFeedback('');setMode('signup')}}>Refazer cadastro</button></p>
    </div>}
   {!user&&!pendingEmail&&<div className="portal-auth">
-   <div className="portal-welcome"><PawPrint size={48}/><h2>Todo pet merece encontrar seu lar.</h2><p>Crie uma conta para adotar, proteger ou divulgar animais. A adoção é gratuita.</p><div className="portal-features"><span>♡ Adoção responsável</span><span>✓ Perfis de protetores e ONGs</span><span>⌂ Começando pelo Distrito Federal</span></div></div>
+   <div className="portal-welcome"><PawPrint size={48}/><h2>Todo pet merece encontrar seu lar.</h2><p>Crie uma conta para adotar, proteger ou divulgar animais. A adoção é gratuita.</p><div className="portal-features"><span>♡ Adoção responsável</span><span>✓ Perfis de protetores e ONGs</span><span>⌂ Começando pelo DF e Fernandópolis (SP)</span></div></div>
    <div className="portal-panel">
     <div className="portal-tabs"><button type="button" className={mode==='signup'?'selected':''} onClick={()=>{setMode('signup');setMessage('')}}>Criar conta</button><button type="button" className={mode==='login'?'selected':''} onClick={()=>{setMode('login');setMessage('')}}>Entrar</button></div>
     <form onSubmit={auth} className="portal-form">
