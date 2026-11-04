@@ -3,8 +3,9 @@ import {ArrowRight,ArrowLeft,Sparkles,MapPin,Info,ShieldCheck,RefreshCw,PawPrint
 import {supabase,type PetListing} from './supabase'
 import {emptyMatch,rankMatches,type MatchAnswers} from './matchEngine'
 import './match.css'
+import {SUPPORTED_CITIES} from './supportedLocations'
 
-type Props={onExplore:(petName:string)=>void}
+type Props={onExplore:(petName:string,city?:string)=>void}
 const steps=[
  {key:'home',title:'Como é sua moradia?',subtitle:'Não existe um tipo de casa ideal para todos os pets.',options:[['casa','Casa'],['apartamento','Apartamento']]},
  {key:'children',title:'Há crianças na sua casa?',subtitle:'Vamos destacar cuidados a confirmar com o protetor.',options:[['sim','Sim'],['nao','Não']]},
@@ -16,6 +17,7 @@ const steps=[
 ] as const
 export default function MatchCaonect({onExplore}:Props){
  const [answers,setAnswers]=useState<MatchAnswers>(emptyMatch)
+ const [matchCity,setMatchCity]=useState('Todas')
  const [step,setStep]=useState(0)
  const [results,setResults]=useState(false)
  const [pets,setPets]=useState<PetListing[]>([])
@@ -25,14 +27,14 @@ export default function MatchCaonect({onExplore}:Props){
   if(!results||!supabase)return
   const client=supabase;let mounted=true
   setLoading(true);setError('')
-  client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,neighborhood,photo_urls,color,breed,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').in('species',['Cachorro','Gato']).order('created_at',{ascending:false}).limit(100).then(({data,error})=>{
+  (matchCity==='Todas'?client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,neighborhood,photo_urls,color,breed,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').in('species',['Cachorro','Gato']):client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,neighborhood,photo_urls,color,breed,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').in('species',['Cachorro','Gato']).eq('city',matchCity)).order('created_at',{ascending:false}).limit(100).then(({data,error})=>{
    if(!mounted)return
    setLoading(false)
    if(error)setError('Não foi possível carregar os pets agora. Tente novamente.')
    else setPets((data||[]) as PetListing[])
   })
   return()=>{mounted=false}
- },[results])
+ },[results,matchCity])
  const ranked=useMemo(()=>rankMatches(pets,answers),[pets,answers])
  const current=steps[step]
  const answer=answers[current.key]
@@ -40,7 +42,7 @@ export default function MatchCaonect({onExplore}:Props){
  const next=()=>{if(!answer)return;if(step<steps.length-1)setStep(s=>s+1);else setResults(true)}
  const restart=()=>{setAnswers(emptyMatch);setStep(0);setResults(false);setPets([]);setError('')}
  return <section className="section page match-page">
-  <div className="match-intro"><span className="kicker"><Sparkles size={15}/> MATCH CÃONECT</span><h1>Encontre uma conexão que combine com sua rotina</h1><p>Nesta primeira versão, o Match avalia apenas cães e gatos. Outras espécies podem ser encontradas em Explorar e terão questionários próprios. A decisão exige conversa com o responsável.</p></div>
+  <div className="match-intro"><span className="kicker"><Sparkles size={15}/> MATCH CÃONECT</span><h1>Encontre uma conexão que combine com sua rotina</h1><p>Nesta primeira versão, o Match avalia apenas cães e gatos. Outras espécies podem ser encontradas em Explorar e terão questionários próprios. A decisão exige conversa com o responsável.</p><label className="match-city-selector">Procurar animais em <select value={matchCity} onChange={e=>setMatchCity(e.target.value)}><option value="Todas">Todas as cidades</option>{SUPPORTED_CITIES.map(c=><option key={c.city} value={c.city}>{c.label}</option>)}</select></label></div>
   {!results?<div className="match-wizard">
    <div className="match-progress"><span>Passo {step+1} de {steps.length}</span><span>{Math.round(step/steps.length*100)}% concluído</span></div>
    <div className="match-track"><span style={{width:Math.round(step/steps.length*100)+'%'}}/></div>
@@ -59,7 +61,7 @@ export default function MatchCaonect({onExplore}:Props){
     {reasons.length>0&&<div className="match-points"><strong>O que pode combinar:</strong>{reasons.map(r=><span key={r}>✓ {r}</span>)}</div>}
     {cautions.length>0&&<div className="match-cautions"><strong>Converse antes de decidir:</strong>{cautions.map(c=><span key={c}>! {c}</span>)}</div>}
     {unknowns.length>0&&<p className="match-unknown"><Info size={15}/>{unknowns.join(' · ')}</p>}
-    <button type="button" className="primary match-open" onClick={()=>onExplore(pet.name)}>Conhecer {pet.name} <ArrowRight size={17}/></button>
+    <button type="button" className="primary match-open" onClick={()=>onExplore(pet.name,pet.city)}>Conhecer {pet.name} <ArrowRight size={17}/></button>
     </div>
    </article>)}</div>}
    <div className="match-footer-note"><ShieldCheck size={18}/><p>A escolha deve considerar avaliação do protetor, ambiente, segurança e necessidades individuais do animal. Informações ausentes não são tratadas como confirmação de compatibilidade.</p></div>
