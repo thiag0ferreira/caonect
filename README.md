@@ -176,3 +176,32 @@ As informações são carregadas por `caonect_conversation_people(uuid)`, funç�
 5. Uma terceira conta não deve poder consultar os dados pela função; teste de autorização no Supabase antes do lançamento público.
 
 Se aparecer a mensagem de que é necessário executar a migração, confirme a execução no projeto correto e recarregue o site.
+
+
+## DIFF 003.2 — Questionário e adoção concluída
+
+**Execute primeiro** [supabase/diff-0032-adocao-responsavel.sql](supabase/diff-0032-adocao-responsavel.sql) no SQL Editor do Cãonect. A migração preserva as conversas, pets e usuários existentes. O deploy frontend é automático após o push na branch `main`.
+
+### Novo fluxo
+1. Visitante clica em **Tenho interesse em adotar** no perfil de um pet e precisa estar autenticado.
+2. Adotante responde ao questionário (moradia, convivência, crianças, outros animais, tempo, experiência e motivação).
+3. O formulário é visível apenas ao próprio adotante e ao responsável pelo pet graças a RLS.
+4. Protetor consulta as respostas na conversa e altera o andamento para **Em análise** e depois **Aprovada**, se considerar adequado. Aprovação não equivale à entrega do pet.
+5. **Só depois da entrega efetiva**, o protetor clica em **Confirmar adoção concluída**. O Supabase faz uma transação que marca a solicitação como `completed`, o pet como `adopted` e encerra outras solicitações em aberto. O histórico de atividades do pet é atualizado pelo trigger já existente.
+6. A conversa concluída torna-se somente leitura e o animal sai do catálogo dos disponíveis.
+
+O backend impede a conclusão direta fora da função protegida, protege uma adoção efetivamente concluída contra reabertura pelo seletor de pets e exige o questionário para novas aprovações com `intent='adoption'`. Solicitações antigas já aprovadas continuam válidas, mesmo sem formulário.
+
+**Atenção:** o painel de pets ainda permite marcar como **Adotado** em casos de adoção externa, sem vínculo com uma solicitação do Cãonect. Não confunda essa ação com a conclusão de um pedido dentro da plataforma.
+
+### Teste
+- Com conta de adotante, abra pet disponível e preencha o formulário.
+- Com conta de protetor, abra **Adoções**, leia as respostas e selecione **Em análise** → **Aprovada**.
+- **Não conclua a adoção apenas para testar com um pet real**: a conclusão encerra outros pedidos e é tratada como definitiva. Use um pet de teste identificado como fictício e depois retire-o do ambiente, ou aguarde uma adoção real.
+- Depois da entrega, confirme a conclusão e confira pet `adopted`, pedido `completed` e mural atualizado.
+
+### Limites desta versão
+- Não coleta RG/CPF, renda, endereço completo, fotos pessoais nem documentos.
+- O questionário orienta a avaliação humana, não aprova nem recusa automaticamente.
+- Não foram implementados denúncia, auditoria de moderação, alterações do questionário nem exclusão de conta. Necessários antes de abertura pública.
+- O modo de conversa sem solicitação continua disponível no botão **Conversar**.
