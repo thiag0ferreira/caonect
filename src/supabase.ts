@@ -8,7 +8,7 @@ export const supabase = isBackendReady ? createClient(url!, anon!, { auth: { per
 export type PetListing = {
   id: string; owner_id: string; name: string; species: 'Cachorro' | 'Gato'
   size: 'Pequeno' | 'Médio' | 'Grande'; age_label: string; city: string
-  district: string; color: string; breed: string; approximate_lat: number | null; approximate_lng: number | null; description: string; personality: string[]
+  district: string; neighborhood?: string; photo_urls?: string[]; color: string; breed: string; approximate_lat: number | null; approximate_lng: number | null; description: string; personality: string[]
   image_url: string | null; status: 'available' | 'reserved' | 'adopted'
   created_at: string
 }
