@@ -3,7 +3,7 @@ import { supabase, isBackendReady, type PetListing } from './supabase'
 import type { User } from '@supabase/supabase-js'
 import { Heart, ShieldCheck, LogIn, LogOut, Plus, PawPrint, Building2, UserRound, ImagePlus, Trash2, Pencil, MapPin, Save, X, MailCheck, Mail, ArrowRight, CheckCircle2 } from 'lucide-react'
 import './portal.css'
-import {CITY,RAS,normalizeRA} from './dfRegions'
+import {RAS} from './dfRegions'
 import {ANIMAL_CATEGORIES,categoryForSpecies,speciesForCategory,requiresReview} from './animalCategories'
 import {SUPPORTED_CITIES,stateForCity,districtLabel,neighborhoodLabel,normalizeDistrict,DEFAULT_CITY} from './supportedLocations'
 
@@ -42,7 +42,7 @@ export default function Portal({onPublished}:Props){
  const [editingPet,setEditingPet]=useState<string|null>(null)
  const [petCoords,setPetCoords]=useState<{lat:number;lng:number}|null>(null)
  const [editingProfile,setEditingProfile]=useState(false)
- const [profileFields,setProfileFields]=useState({display_name:'',city:CITY,district:'',neighborhood:'',phone:''})
+ const [profileFields,setProfileFields]=useState({display_name:'',city:DEFAULT_CITY,district:'',neighborhood:'',phone:''})
  useEffect(()=>{
   const fragment=new URLSearchParams(window.location.hash.slice(1))
   const query=new URLSearchParams(window.location.search)
