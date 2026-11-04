@@ -152,3 +152,27 @@ RLS protege as tabelas privadas. A tabela `pet_activity` só permite escrita via
 5. Salve e abra Amarelo na vitrine para navegar na galeria.
 
 Fonte de referência das RAs: https://pdad.ipe.df.gov.br/
+
+
+## DIFF 003.1 — Identificação privada no chat
+
+**Passo necessário para ativar:** execute [supabase/diff-0031-participantes-chat.sql](supabase/diff-0031-participantes-chat.sql) no **SQL Editor** do projeto Cãonect.
+
+O cabeçalho da conversa mostra, para os participantes autenticados:
+- Pet: nome, raça, foto e Região Administrativa;
+- Responsável: nome exibido, categoria (Protetor/ONG) e localização geral (bairro, RA, Brasília);
+- Interessado: nome exibido, categoria Adotante e localização geral;
+- Identificação de **Você** no cartão do participante logado.
+
+As informações são carregadas por `caonect_conversation_people(uuid)`, função `SECURITY DEFINER` com verificação obrigatória de `auth.uid()` contra o adotante/protetor da solicitação. A função não devolve e-mail, telefone, endereço exato nem coordenadas.
+
+**Não há compartilhamento automático de contato após aprovação**. Qualquer recurso de compartilhamento futuro deverá exigir autorização explícita da pessoa que fornece o contato.
+
+### Teste recomendado
+1. Execute a migração SQL.
+2. Confira o GitHub Actions e abra o Cãonect.
+3. Entre com o protetor, abra uma conversa existente e verifique os dois cartões.
+4. Abra a mesma conversa com o adotante e verifique os mesmos nomes e locais.
+5. Uma terceira conta não deve poder consultar os dados pela função; teste de autorização no Supabase antes do lançamento público.
+
+Se aparecer a mensagem de que é necessário executar a migração, confirme a execução no projeto correto e recarregue o site.
