@@ -32,8 +32,8 @@ export async function startConversation(pet:PetListing,user:User,intent:'questio
  if(existing){
   if(existing.status==='cancelled'||existing.status==='rejected')throw Error('Esta conversa foi encerrada. Peça ao responsável para reavaliar o contato.')
   if(intent==='adoption'&&existing.intent==='question'){
-   // O interessado declara interesse em adotar; a RLS mantém a alteração de estado sob controle do protetor.
-   // Este interesse pode ser comunicado pelo chat, sem modificar a solicitação.
+   const {error:noticeError}=await supabase.from('adoption_messages').insert({request_id:existing.id,sender_id:user.id,body:'Tenho interesse em adotar este pet. Podemos conversar sobre os próximos passos?'})
+   if(noticeError)throw Error('Não foi possível comunicar seu interesse: '+noticeError.message)
   }
   return existing as AdoptionRequest
  }
