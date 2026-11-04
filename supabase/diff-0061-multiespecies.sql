@@ -60,8 +60,13 @@ begin
    end if;
    if new.animal_category is distinct from old.animal_category or
       new.species is distinct from old.species then
-      new.review_status=case when new.animal_category in ('Cachorros','Gatos')
-        then 'approved' else 'pending' end;
+      -- Trocar uma espécie pendente por cão/gato não libera automaticamente
+      -- um anúncio que ainda aguarda revisão.
+      new.review_status=case
+        when old.review_status='approved' and new.animal_category in ('Cachorros','Gatos')
+          then 'approved'
+        else 'pending'
+      end;
    end if;
  end if;
  return new;
