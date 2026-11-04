@@ -25,7 +25,7 @@ export default function MatchCaonect({onExplore}:Props){
   if(!results||!supabase)return
   const client=supabase;let mounted=true
   setLoading(true);setError('')
-  client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,neighborhood,photo_urls,color,breed,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').order('created_at',{ascending:false}).limit(100).then(({data,error})=>{
+  client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,neighborhood,photo_urls,color,breed,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').in('species',['Cachorro','Gato']).order('created_at',{ascending:false}).limit(100).then(({data,error})=>{
    if(!mounted)return
    setLoading(false)
    if(error)setError('Não foi possível carregar os pets agora. Tente novamente.')
@@ -40,7 +40,7 @@ export default function MatchCaonect({onExplore}:Props){
  const next=()=>{if(!answer)return;if(step<steps.length-1)setStep(s=>s+1);else setResults(true)}
  const restart=()=>{setAnswers(emptyMatch);setStep(0);setResults(false);setPets([]);setError('')}
  return <section className="section page match-page">
-  <div className="match-intro"><span className="kicker"><Sparkles size={15}/> MATCH CÃONECT</span><h1>Encontre uma conexão que combine com sua rotina</h1><p>Um guia gratuito para descobrir pets com características possivelmente alinhadas ao seu dia a dia. A decisão exige conversa com o protetor.</p></div>
+  <div className="match-intro"><span className="kicker"><Sparkles size={15}/> MATCH CÃONECT</span><h1>Encontre uma conexão que combine com sua rotina</h1><p>Nesta primeira versão, o Match avalia apenas cães e gatos. Outras espécies podem ser encontradas em Explorar e terão questionários próprios. A decisão exige conversa com o responsável.</p></div>
   {!results?<div className="match-wizard">
    <div className="match-progress"><span>Passo {step+1} de {steps.length}</span><span>{Math.round(step/steps.length*100)}% concluído</span></div>
    <div className="match-track"><span style={{width:Math.round(step/steps.length*100)+'%'}}/></div>
