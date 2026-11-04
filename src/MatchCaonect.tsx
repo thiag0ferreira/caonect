@@ -27,7 +27,7 @@ export default function MatchCaonect({onExplore}:Props){
   if(!results||!supabase)return
   const client=supabase;let mounted=true
   setLoading(true);setError('')
-  (matchCity==='Todas'?client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,neighborhood,photo_urls,color,breed,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').in('species',['Cachorro','Gato']):client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,neighborhood,photo_urls,color,breed,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').in('species',['Cachorro','Gato']).eq('city',matchCity)).order('created_at',{ascending:false}).limit(100).then(({data,error})=>{
+  ;(matchCity==='Todas'?client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,neighborhood,photo_urls,color,breed,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').in('species',['Cachorro','Gato']):client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,neighborhood,photo_urls,color,breed,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').in('species',['Cachorro','Gato']).eq('city',matchCity)).order('created_at',{ascending:false}).limit(100).then(({data,error})=>{
    if(!mounted)return
    setLoading(false)
    if(error)setError('Não foi possível carregar os pets agora. Tente novamente.')
