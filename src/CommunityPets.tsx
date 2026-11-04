@@ -40,7 +40,7 @@ export default function CommunityPets({mode='explore',query='',location='',speci
    ()=>setGeoError('Localização não autorizada ou indisponível. Você pode continuar buscando por região.'),
    {enableHighAccuracy:false,timeout:12000,maximumAge:60000})
  }
- const filtered=pets.filter(p=>(!position||(distance(p)!==null&&distance(p)!<=radius))&&(mode!=='favorites'||ids.includes(p.id))&&(species==='Todos'||species===p.species)&&(size==='Todos'||size===p.size)&&(`${p.name} ${p.species} ${p.personality.join(' ')} ${p.description}`.toLowerCase().includes(query.toLowerCase()))&&(`${p.city} ${p.district}`.toLowerCase().includes(location.toLowerCase())))
+ const filtered=pets.filter(p=>(!position||(distance(p)!==null&&distance(p)!<=radius))&&(mode!=='favorites'||ids.includes(p.id))&&(species==='Todos'||species===p.species)&&(size==='Todos'||size===p.size)&&(`${p.name} ${p.species} ${p.personality.join(' ')} ${p.description}`.toLowerCase().includes(query.toLowerCase()))&&(`${p.city} ${p.district} ${p.neighborhood||''}`.toLowerCase().includes(location.toLowerCase())))
  const sorted=position?[...filtered].sort((a,b)=>(distance(a)??Infinity)-(distance(b)??Infinity)):filtered
  const shown=limit?sorted.slice(0,limit):sorted
  const openPet=(p:PetListing)=>{setPhotoIndex(0);setDetail(p);setNotice('')}
