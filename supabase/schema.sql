@@ -32,6 +32,13 @@ create index if not exists pets_status_created_idx on public.pets(status, create
 create index if not exists pets_owner_id_idx on public.pets(owner_id);
 create index if not exists pets_location_idx on public.pets(city,district);
 
+-- Direitos mínimos de API: políticas RLS não substituem GRANTs.
+revoke all on table public.profiles from anon, authenticated;
+revoke all on table public.pets from anon, authenticated;
+grant select, update on table public.profiles to authenticated;
+grant select on table public.pets to anon;
+grant select, insert, update, delete on table public.pets to authenticated;
+
 alter table public.profiles enable row level security;
 alter table public.pets enable row level security;
 
