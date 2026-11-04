@@ -69,3 +69,36 @@ npm run build
 A branch `main` publica automaticamente via GitHub Actions em:
 
 https://thiag0ferreira.github.io/caonect/
+
+
+## DIFF 002.1 — Catálogo real, favoritos e conversas
+
+Atualizado: o catálogo de demonstração foi removido da Home, Explorar e Favoritos. Agora os cards são de animais cadastrados de verdade no banco, com filtros por espécie, porte, personalidade e região.
+
+### Passo obrigatório antes de usar as novas ações
+
+1. Entre no SQL Editor do projeto **caonect** no Supabase.
+2. Abra [supabase/diff-0021-interacoes.sql](supabase/diff-0021-interacoes.sql) neste repositório.
+3. Copie o script completo e execute uma única vez.
+4. Confira se aparecem `pet_favorites`, `adoption_requests` e `adoption_messages` no Table Editor.
+5. O GitHub Actions publica o frontend em cada push na `main`.
+
+### Teste do fluxo
+
+1. Entre no aplicativo com uma conta diferente da conta responsável pelo animal.
+2. Abra o animal e clique em **Curtir/Favoritar**. Acesse Favoritos e confirme.
+3. Clique em **Conversar** ou **Tenho interesse em adotar**: cria-se uma solicitação privada.
+4. Acesse **Adoções** e envie a primeira mensagem.
+5. Entre com a conta do protetor: abra **Adoções** para responder e atualizar o andamento.
+6. Não compartilhe documentos, endereço completo ou contatos pessoais nos chats de teste.
+
+### Observações
+
+- Login obrigatório para salvar favoritos, iniciar conversas e solicitar adoção.
+- A mesma pessoa não pode solicitar adoção do próprio animal.
+- Uma conversa por par adotante/animal. Novo clique reabre a conversa existente.
+- O protetor gerencia o status; não é uma decisão automatizada.
+- Mensagens são consultadas periodicamente (a cada 7 segundos), sem serviço de realtime pago.
+- O botão **Curtir** significa marcar como favorito, não corresponde a uma contagem pública de curtidas.
+- A plataforma ainda precisa de moderação, denúncia, bloqueio, política de privacidade e controles de abuso para lançamento amplo.
+- A migração depende da execução manual no Supabase. **O frontend sozinho não cria tabelas.**
