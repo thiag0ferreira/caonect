@@ -240,3 +240,30 @@ Características como `Não gosta de crianças` recebem destaque de atenção, n
 6. No celular, confira cartões, botões e aba Match na barra inferior.
 
 **Limitações:** não existe confirmação formal de comportamento nem verificação de segurança para crianças e outros pets. Sem informações suficientes, o resultado sinaliza incerteza. Regras serão refinadas em avaliações futuras.
+
+
+## DIFF 005 — Branding oficial e PWA (www.caonect.com.br)
+
+Identidade aprovada: logo de cão + gato + coração, slogan **Encontros que viram família**, verde **#285B4E**, creme **#F7F4EE**, verde suave **#DCEBE3**, marrom **#4A2600**.
+
+### Arquivos
+- `public/brand-logo.svg`: versão vetorial fiel à ilustração completa original, usada no cabeçalho e no rodapé.
+- `public/app-icon.svg` e `public/favicon.svg`: ícone contrastante verde e creme.
+- `scripts/generate-brand-assets.mjs`: usa Sharp para criar PNGs no diretório `public/` antes do build.
+- PNGs gerados: `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, `favicon-32.png`, `favicon-16.png`, `og-image.png` (1200x630).
+- `public/manifest.webmanifest`: nome, cores, escopo e ícones Android/PWA.
+- `index.html`: ícones, SEO, Open Graph/WhatsApp e Twitter card, URL canônica.
+- `src/main.tsx`, `src/style.css`: logo visual no cabeçalho/rodapé.
+
+### Implantação
+1. O workflow já executa `npm install` seguido de `npm run build`: o hook `prebuild` gera os PNGs automaticamente via Sharp.
+2. Não é necessário fazer upload manual dos PNGs: eles são produzidos em cada build e publicados no GitHub Pages.
+3. Confira a execução verde em **GitHub Actions** e acesse `https://www.caonect.com.br/`.
+4. Verifique `/manifest.webmanifest`, `/icon-512.png` e `/og-image.png`.
+5. Para atualizar o ícone de uma instalação anterior, pode ser necessário remover e instalar o PWA novamente; celulares podem manter ícones antigos em cache.
+6. O site permanece online; nenhuma mudança no Supabase ou nas tabelas é exigida.
+
+### Observações
+A instalação via PWA funciona em plataformas compatíveis. O Cãonect ainda **não oferece modo offline para mensagens, pets ou autenticação**: esses recursos exigem internet. Splash nativa de Android/iOS pode variar segundo plataforma e versão do sistema. Imagens de compartilhamento são atualizadas conforme o cache das plataformas.
+
+Para substituir futuramente a marca vetorizada por um arquivo mestre de imagem, preserve o nome `brand-logo.svg` e as dimensões para não afetar o layout.
