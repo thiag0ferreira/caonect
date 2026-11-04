@@ -82,6 +82,11 @@ create or replace function public.caonect_guard_completed_request()
 returns trigger language plpgsql set search_path = ''
 as $$
 begin
+ if new.status='approved' and old.status is distinct from 'approved'
+    and new.intent='adoption'
+    and not exists(select 1 from public.adoption_questionnaires q where q.request_id=new.id) then
+    raise exception 'Solicitação de adoção exige questionário antes da aprovação';
+ end if;
  if new.status='completed' and old.status is distinct from 'completed' then
    if new.completed_at is null or old.status<>'approved' or
      not exists(select 1 from public.pets where id=new.pet_id and status='adopted') then
