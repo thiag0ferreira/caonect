@@ -205,3 +205,12 @@ O backend impede a conclusão direta fora da função protegida, protege uma ado
 - O questionário orienta a avaliação humana, não aprova nem recusa automaticamente.
 - Não foram implementados denúncia, auditoria de moderação, alterações do questionário nem exclusão de conta. Necessários antes de abertura pública.
 - O modo de conversa sem solicitação continua disponível no botão **Conversar**.
+
+
+## Revisão pós-testes — DIFF 003.2.1
+
+O fluxo testado por dois usuários passou em cinco etapas. Foi identificado um ponto adicional de segurança: a política de inserção de mensagens ainda não bloqueava conversas com status `completed`, embora a interface já bloqueasse o envio. A migração [diff-0032-1-bloqueio-chat-concluido.sql](supabase/diff-0032-1-bloqueio-chat-concluido.sql) alinha a RLS com a interface.
+
+**Execute essa migração no SQL Editor do Cãonect.** A operação apenas substitui a política de INSERT de mensagens, sem eliminar conversas, contas ou questionários existentes.
+
+Validação posterior recomendada: em uma solicitação de teste efetivamente concluída, confirmar que um INSERT direto em `adoption_messages` por um dos participantes é recusado e que a leitura do histórico continua autorizada. Não conclua uma adoção real apenas para testar.
