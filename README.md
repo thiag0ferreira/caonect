@@ -129,3 +129,26 @@ Atualizado: o catálogo de demonstração foi removido da Home, Explorar e Favor
 ### Segurança
 
 RLS protege as tabelas privadas. A tabela `pet_activity` só permite escrita via gatilho do servidor. A informação sobre região/animal e o status de adoção ficam públicos. Pessoas não devem cadastrar endereços residenciais nas descrições.
+
+
+## DIFF 002.3 — DF e galeria de cinco fotos
+
+**Obrigatório:** execute no SQL Editor do projeto Cãonect o arquivo [supabase/diff-0023-df-galeria.sql](supabase/diff-0023-df-galeria.sql) ANTES de tentar editar/cadastrar pets na versão atualizada.
+
+- Cidade fixa: Brasília (DF). Cadastro de usuário, edição do perfil e cadastro/edição de pets usam a lista oficial de **35 RAs** do DF, baseada no IPEDF/GDF.
+- Bairro/setor é separado da Região Administrativa (campo opcional).
+- Até **cinco fotos por animal**, com tamanho máximo de 5 MB por arquivo e tipos JPG, PNG ou WebP. A primeira foto é a capa do catálogo.
+- Em um pet já existente, o SQL copia `image_url` para `photo_urls` se não havia galeria: preserva a foto do Amarelo.
+- Edição permite acrescentar fotos e retirar referências da galeria; o arquivo físico retirado não é excluído automaticamente do Storage, para evitar perda acidental. Rotina de limpeza virá depois.
+- Galeria navegável no modal do pet, com controles de anterior/próxima imagem.
+- A migração **não corrige automaticamente nomes antigos** de regiões (por exemplo, "Ceilândia Sul (Ceilândia)"). Abra Editar Perfil / Editar Pet, selecione a RA oficial e preencha o bairro/setor para normalizar.
+- Busca por proximidade continua opcional, independente do campo RA; protege coordenadas aproximadas quando informadas.
+
+### Teste
+1. Execute o SQL.
+2. Veja a execução verde do GitHub Actions.
+3. Abra Perfil → Editar perfil e confira cidade fixa e dropdown de RA.
+4. Abra Amarelo → Editar pet e verifique que a foto anterior aparece; acrescente até quatro.
+5. Salve e abra Amarelo na vitrine para navegar na galeria.
+
+Fonte de referência das RAs: https://pdad.ipe.df.gov.br/
