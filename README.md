@@ -307,3 +307,41 @@ A categoria "Outros" não concede permissão de anúncio: exige avaliação.
 ### Monetização futura
 Consulte [`docs/monetizacao.md`](docs/monetizacao.md).
 O projeto segue gratuito neste DIFF.
+
+
+## DIFF 006.4 — Expansão-piloto: Brasília/DF + Fernandópolis/SP
+
+O Cãonect passa a aceitar perfis de adotantes, protetores e ONGs de **Brasília (DF)**
+e **Fernandópolis (SP)**, em um só domínio e no mesmo Supabase.
+
+**Obrigatório:** execute [`supabase/diff-0064-brasilia-fernandopolis.sql`](supabase/diff-0064-brasilia-fernandopolis.sql)
+no SQL Editor antes de testar novos cadastros e edições de localização. É uma migração
+transacional, preservando os pets, fotos, conversas e perfis existentes.
+
+- Brasília continua com as 35 RAs e campo de bairro/setor opcional.
+- Fernandópolis usa campo **bairro/região** preenchido manualmente. Não foi
+  inventada uma lista oficial de bairros: o município possui consulta oficial
+  de CEP por logradouro; confirmação de bairro pode ser feita por esse serviço.
+- O cadastro do pet permite selecionar uma das duas cidades, independentemente
+  da cidade do protetor. Não publica localização exata.
+- A home e o catálogo permitem filtrar os animais por cidade.
+- O campo `state` grava `DF` ou `SP` e registros antigos são preenchidos
+  com `DF`. Mudanças de cidade/UF passam por validação no banco.
+- Anúncios de espécies regulamentadas continuam pendentes de moderação,
+  conforme DIFF 006.1.
+- Para levar a ONG Pelos e Patas de Fernandópolis à plataforma, o representante
+  deve criar uma conta no papel ONG e informar **Fernandópolis — SP**.
+  Isso **não verifica formalmente** a associação nem dá selo de autenticidade:
+  a verificação institucional e perfis de equipe serão desenvolvidos depois.
+
+### Verificação
+1. Após SQL e GitHub Actions verde, faça login no Cãonect.
+2. Perfil → Editar perfil: alterne as cidades e confira RA (DF) ou bairro (SP).
+3. Perfil → Cadastrar pet: selecione Fernandópolis e confirme campo de bairro.
+4. Explore: selecione Fernandópolis; não deve mostrar pets apenas do DF.
+5. Explore: selecione Brasília; Batata e Amarelo devem continuar disponíveis.
+6. No segundo navegador, teste cadastro ONG em Fernandópolis e login confirmado.
+7. Não cadastre ONG como verificada nem publique em nome dela sem autorização.
+
+Fontes para validar ONG: notícias da Prefeitura de Fernandópolis sobre parceria
+com a Associação Pelos e Patas (2024 e 2026).
