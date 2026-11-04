@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react'
-import {Heart,MessageCircle,MapPin,PawPrint,ShieldCheck,Search,X} from 'lucide-react'
+import {Heart,MessageCircle,MapPin,PawPrint,ShieldCheck,X,Navigation} from 'lucide-react'
 import {supabase,isBackendReady,type PetListing} from './supabase'
 import {useCurrentUser,useFavorites,startConversation} from './Interactions'
 import type {User} from '@supabase/supabase-js'
@@ -16,14 +16,32 @@ export default function CommunityPets({mode='explore',query='',location='',speci
  const [working,setWorking]=useState(false)
  const [notice,setNotice]=useState('')
  const [refresh,setRefresh]=useState(0)
+ const [position,setPosition]=useState<{lat:number;lng:number}|null>(null)
+ const [radius,setRadius]=useState(25)
+ const [geoError,setGeoError]=useState('')
  useEffect(()=>{if(!supabase)return;let live=true
  const client=supabase
- client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,color,description,personality,image_url,status,created_at').eq('status','available').order('created_at',{ascending:false}).limit(100)
+ client.from('pets').select('id,owner_id,name,species,size,age_label,city,district,color,breed,approximate_lat,approximate_lng,description,personality,image_url,status,created_at').eq('status','available').order('created_at',{ascending:false}).limit(100)
   .then(({data,error})=>{if(live){if(error)setError('Falha ao carregar pets. '+error.message);else{setPets((data||[]) as PetListing[]);setError('')}}})
  return()=>{live=false}
  },[refresh])
- const filtered=pets.filter(p=>(mode!=='favorites'||ids.includes(p.id))&&(species==='Todos'||species===p.species)&&(size==='Todos'||size===p.size)&&(`${p.name} ${p.species} ${p.personality.join(' ')} ${p.description}`.toLowerCase().includes(query.toLowerCase()))&&(`${p.city} ${p.district}`.toLowerCase().includes(location.toLowerCase())))
- const shown=limit?filtered.slice(0,limit):filtered
+ const distance=(p:PetListing)=>{
+  if(!position||p.approximate_lat==null||p.approximate_lng==null)return null
+  const radians=(x:number)=>x*Math.PI/180
+  const dLat=radians(p.approximate_lat-position.lat),dLon=radians(p.approximate_lng-position.lng)
+  const a=Math.sin(dLat/2)**2+Math.cos(radians(position.lat))*Math.cos(radians(p.approximate_lat))*Math.sin(dLon/2)**2
+  return 6371*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+ }
+ const askNearby=()=>{
+  if(!navigator.geolocation){setGeoError('Geolocalização não disponível neste navegador.');return}
+  setGeoError('');navigator.geolocation.getCurrentPosition(
+   p=>setPosition({lat:p.coords.latitude,lng:p.coords.longitude}),
+   ()=>setGeoError('Localização não autorizada ou indisponível. Você pode continuar buscando por região.'),
+   {enableHighAccuracy:false,timeout:12000,maximumAge:60000})
+ }
+ const filtered=pets.filter(p=>(!position||(distance(p)!==null&&distance(p)!<=radius))&&(mode!=='favorites'||ids.includes(p.id))&&(species==='Todos'||species===p.species)&&(size==='Todos'||size===p.size)&&(`${p.name} ${p.species} ${p.personality.join(' ')} ${p.description}`.toLowerCase().includes(query.toLowerCase()))&&(`${p.city} ${p.district}`.toLowerCase().includes(location.toLowerCase())))
+ const sorted=position?[...filtered].sort((a,b)=>(distance(a)??Infinity)-(distance(b)??Infinity)):filtered
+ const shown=limit?sorted.slice(0,limit):sorted
  async function favorite(p:PetListing){
   setNotice('')
   if(!user){setNotice('Entre na sua conta para salvar favoritos.');return}
@@ -39,19 +57,19 @@ export default function CommunityPets({mode='explore',query='',location='',speci
   finally{setWorking(false)}
  }
  if(!isBackendReady)return <div className="empty"><p>O catálogo está indisponível. Verifique a configuração do Supabase.</p></div>
- return <div className="community-pets">{error&&<p role="alert" className="portal-notice">{error}</p>}{favError&&<p role="alert" className="portal-notice">{favError}</p>}
+ return <div className="community-pets">{mode==='explore'&&<div className="nearby-panel"><button className="secondary" onClick={position?()=>setPosition(null):askNearby}><Navigation size={17}/>{position?'Desativar proximidade':'Buscar perto de mim'}</button>{position&&<><label>Distância <select value={radius} onChange={e=>setRadius(Number(e.target.value))}>{[5,10,25,50,100,200].map(k=><option key={k} value={k}>Até {k} km</option>)}</select></label><small>Mostrando apenas pets com localização aproximada cadastrada.</small></>}{geoError&&<small role="alert">{geoError}</small>}</div>}{error&&<p role="alert" className="portal-notice">{error}</p>}{favError&&<p role="alert" className="portal-notice">{favError}</p>}
   {mode==='explore'&&<p className="results">{filtered.length} animais disponíveis encontrados</p>}
   {shown.length===0&&!error&&<div className="empty"><PawPrint size={36}/><h2>{mode==='favorites'?'Seu coração ainda tem espaço':'Nenhum pet encontrado'}</h2><p>{mode==='favorites'?'Favorite um animal para encontrá-lo aqui depois.':'Tente outros filtros ou volte para ver novas adoções.'}</p></div>}
   <div className="grid">{shown.map(p=><article className="pet-card" key={p.id}>
    <button className="photo-button" onClick={()=>{setDetail(p);setNotice('')}} aria-label={'Conhecer '+p.name}>{p.image_url?<img src={p.image_url} alt={'Foto de '+p.name} loading="lazy"/>:<div className="community-placeholder"><PawPrint size={48}/></div>}<span className="available">Disponível para adoção</span></button>
    <button className={'favorite '+(ids.includes(p.id)?'on':'')} aria-label={ids.includes(p.id)?'Retirar dos favoritos':'Favoritar'} onClick={()=>favorite(p)}><Heart fill={ids.includes(p.id)?'currentColor':'none'}/></button>
-   <div className="pet-content"><div className="pet-title"><h3>{p.name}</h3><span>{p.species}</span></div><p>{p.age_label} · Porte {p.size.toLowerCase()}</p><small><MapPin size={14}/>{p.district}, {p.city}</small><button className="link-button" onClick={()=>{setDetail(p);setNotice('')}}>Conhecer {p.name} →</button></div>
+   <div className="pet-content"><div className="pet-title"><h3>{p.name}</h3><span>{p.species}</span></div><p>{p.age_label} · {p.breed||'SRD'} · Porte {p.size.toLowerCase()}</p>{position&&distance(p)!=null&&<p className="pet-distance">Aproximadamente {Math.round(distance(p)!)} km de você</p>}<small><MapPin size={14}/>{p.district}, {p.city}</small><button className="link-button" onClick={()=>{setDetail(p);setNotice('')}}>Conhecer {p.name} →</button></div>
   </article>)}</div>
   {notice&&!detail&&<p role="status" className="portal-notice">{notice} {!user&&<button onClick={onLogin} className="link-button">Entrar</button>}</p>}
   {detail&&<div className="overlay" onClick={()=>setDetail(null)}><section className="modal community-modal" role="dialog" aria-modal="true" aria-label={'Detalhes de '+detail.name} onClick={e=>e.stopPropagation()}>
    <button className="close" aria-label="Fechar" onClick={()=>setDetail(null)}><X size={20}/></button>
    {detail.image_url?<img className="modal-image" src={detail.image_url} alt={'Foto de '+detail.name}/>:<div className="community-placeholder"><PawPrint size={70}/></div>}
-   <div className="modal-content"><span className="kicker">UM NOVO AMIGO</span><h2>{detail.name}</h2><p>{detail.species} · {detail.age_label} · Porte {detail.size.toLowerCase()}</p><small><MapPin size={15}/>{detail.district}, {detail.city}</small><div className="tags">{detail.color&&<span>{detail.color}</span>}{detail.personality.map(t=><span key={t}>♡ {t}</span>)}</div><h3>Conheça minha história</h3><p>{detail.description}</p>
+   <div className="modal-content"><span className="kicker">UM NOVO AMIGO</span><h2>{detail.name}</h2><p>{detail.species} · {detail.age_label} · Porte {detail.size.toLowerCase()}</p><p>Raça: {detail.breed||'Sem raça definida (SRD)'}</p>{position&&distance(detail)!=null&&<p className="pet-distance">Aproximadamente {Math.round(distance(detail)!)} km de você</p>}<small><MapPin size={15}/>{detail.district}, {detail.city}</small><div className="tags">{detail.color&&<span>{detail.color}</span>}{detail.personality.map(t=><span key={t}>♡ {t}</span>)}</div><h3>Conheça minha história</h3><p>{detail.description}</p>
     <div className="pet-actions"><button disabled={working} className={'secondary '+(ids.includes(detail.id)?'liked':'')} onClick={()=>favorite(detail)}><Heart size={17} fill={ids.includes(detail.id)?'currentColor':'none'}/>{ids.includes(detail.id)?'Salvo nos favoritos':'Curtir / Favoritar'}</button>
     <button disabled={working||detail.owner_id===user?.id} className="secondary" onClick={()=>contact('question')}><MessageCircle size={17}/> Conversar</button>
     <button disabled={working||detail.owner_id===user?.id} className="primary" onClick={()=>contact('adoption')}>Tenho interesse em adotar</button></div>
