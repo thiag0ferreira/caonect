@@ -51,12 +51,13 @@ export function alertForm(a:LostFoundAlert):LostFoundForm{
  custody_status:a.custody_status||'',description:a.description
  }
 }
-export const custodyLabel=(status:string|null)=>({
+const custodyLabels:Record<string,string>={
  with_me:'Está sob meus cuidados',
  with_organization:'Está com uma ONG ou protetor',
  sighting_only:'Apenas foi avistado',
  with_service:'Encaminhado ao serviço responsável'
-}[status||'']||'Não informado')
+}
+export const custodyLabel=(status:string|null)=>custodyLabels[status||'']||'Não informado'
 export const statusLabel=(alert:LostFoundAlert)=>alert.status==='resolved'?'Reencontrado':alert.status==='archived'?'Arquivado':alert.moderation_status==='pending'?'Em revisão':alert.moderation_status==='rejected'?'Não aprovado':alert.alert_type==='lost'?'Perdido':'Encontrado'
 export const categoryOptions=ANIMAL_CATEGORIES.map(c=>({id:c.id,label:c.label,emoji:c.emoji}))
 export {speciesForCategory}
