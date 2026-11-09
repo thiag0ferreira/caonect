@@ -99,16 +99,19 @@ begin
     end if;
   end if;
 
-  if tg_op='INSERT' or
-     new.species is distinct from old.species or
-     new.category is distinct from old.category then
-    if new.category in ('Cachorros','Gatos') and
-       ((new.category='Cachorros' and new.species='Cachorro') or
-        (new.category='Gatos' and new.species='Gato')) then
-      new.moderation_status='approved';
-    else
-      new.moderation_status='pending';
-    end if;
+  if tg_op='INSERT' then
+    new.moderation_status=case
+      when (new.category='Cachorros' and new.species='Cachorro') or
+           (new.category='Gatos' and new.species='Gato') then 'approved'
+      else 'pending' end;
+  elsif new.species is distinct from old.species or
+        new.category is distinct from old.category then
+    -- Uma publicação pendente não pode ser aprovada trocando a espécie.
+    new.moderation_status=case
+      when old.moderation_status='approved' and
+           ((new.category='Cachorros' and new.species='Cachorro') or
+            (new.category='Gatos' and new.species='Gato')) then 'approved'
+      else 'pending' end;
   end if;
 
   if cardinality(new.photo_paths) not between 1 and 3 then
@@ -116,7 +119,7 @@ begin
   end if;
   foreach path in array new.photo_paths loop
     if path is null or
-      path !~ ('^' || new.owner_id::text || '/[0-9a-f-]{36}\\.jpg$') then
+      path !~ ('^' || new.owner_id::text || '/[0-9a-f-]{36}\.jpg$') then
       raise exception 'Os arquivos devem pertencer à pasta do responsável';
     end if;
   end loop;
@@ -199,7 +202,7 @@ for insert to authenticated
 with check (
   bucket_id='lost-found-photos' and
   (storage.foldername(name))[1]=(select auth.uid())::text
-  and name ~ ('^' || (select auth.uid())::text || '/[0-9a-f-]{36}\\.jpg$')
+  and name ~ ('^' || (select auth.uid())::text || '/[0-9a-f-]{36}\.jpg$')
 );
 
 drop policy if exists lf_photo_delete on storage.objects;
