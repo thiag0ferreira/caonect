@@ -1,0 +1,67 @@
+/* Cãonect DIFF 007.2 — Central responsiva de reencontros */
+.lf-page{max-width:1160px}.lf-heading{max-width:790px;margin-bottom:30px}.lf-heading h1{color:#285B4E;margin:9px 0;font-size:clamp(32px,5vw,46px)}.lf-heading p{font-size:15px}
+.lf-panel{border:1px solid #dee9e1;background:#fff;border-radius:19px;padding:25px;box-shadow:0 12px 34px #1946390a}
+.lf-choices{display:grid;grid-template-columns:1fr 1fr;gap:17px;margin-bottom:32px}
+.lf-choice{display:flex;flex-direction:column;gap:8px;padding:28px;text-align:left;border:1px solid #e2e8de;border-radius:20px;background:#fff;transition:transform .18s,box-shadow .18s}
+.lf-choice:hover{transform:translateY(-2px);box-shadow:0 11px 35px #264d4512}
+.lf-choice.lost{background:#fff6ed;border-color:#f4d8c2;color:#90532e}
+.lf-choice.found{background:#edf8ef;border-color:#cee5d4;color:#285b46}
+.lf-choice strong{font-size:23px;font-family:Nunito,sans-serif;color:#264d45}
+.lf-choice span{font-size:14px;color:#687971}.lf-choice b{font-size:13px;display:inline-flex;gap:6px;align-items:center;margin-top:8px}
+.lf-filter-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px}
+.lf-filter-tabs button{border:1px solid #dbe6de;border-radius:24px;padding:10px 16px;font-size:13px;font-weight:700;background:#fff;color:#557668}
+.lf-filter-tabs button.active{background:#285b4e;color:#fff;border-color:#285b4e}
+.lf-filters{display:grid;grid-template-columns:minmax(190px,1.5fr) repeat(3,minmax(140px,1fr));gap:10px;margin-bottom:24px}
+.lf-filters label{display:flex;align-items:center;gap:7px;border:1px solid #dce5de;background:#fbfcfa;border-radius:11px;padding:0 12px}
+.lf-filters label input{border:0;padding:13px 0;background:transparent;min-width:0;outline:0;width:100%}
+.lf-filters>input,.lf-filters>select{border:1px solid #dce5de;border-radius:11px;background:#fbfcfa;padding:13px;color:#324d40;min-width:0}
+.lf-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}
+.lf-card{border:1px solid #e0e8e1;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 9px 30px #1b42340d;display:flex;flex-direction:column}
+.lf-card-image{position:relative;display:block;padding:0;aspect-ratio:4/3;overflow:hidden;background:#e7efea;width:100%}
+.lf-card-image img{width:100%;height:100%;object-fit:cover}.lf-card-image .lf-tag{position:absolute;bottom:10px;left:10px}
+.lf-tag{display:inline-flex;align-items:center;border-radius:25px;padding:7px 12px;font-weight:800;letter-spacing:.5px;font-size:11px}
+.lf-tag.lost{background:#fff1df;color:#a45228}.lf-tag.found{background:#e1f5e8;color:#28664d}
+.lf-card-body{padding:17px;display:flex;flex-direction:column;gap:6px;flex:1}.lf-card-body h3{font-size:20px;color:#264d45;margin:0}
+.lf-card-body p{font-size:12px;display:flex;align-items:start;gap:5px;margin:0;color:#60776d}
+.lf-card-body small{display:flex;gap:6px;align-items:center;color:#839085}
+.lf-card-body .lf-excerpt{margin-top:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lf-card-actions{margin-top:auto;padding-top:15px;display:flex;gap:8px;justify-content:space-between;align-items:center;border-top:1px solid #edf0ed}
+.lf-card-actions button{color:#2d715b;font-weight:800;font-size:12px;padding:6px;display:inline-flex;align-items:center}
+.lf-status{display:inline-block;font-size:11px;font-weight:800;background:#edf5ee;color:#37654b;padding:7px 10px;border-radius:20px;align-self:start}
+.lf-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;text-align:center;gap:10px}
+.lf-empty svg{color:#cc8f6c}.lf-empty h2{color:#264d45;margin:0}
+.lf-footer-note,.lf-privacy,.lf-safety{display:flex;align-items:start;gap:10px;background:#f0f7f1;border-radius:12px;padding:14px 16px;color:#507562;font-size:12px;line-height:1.6}
+.lf-footer-note{margin-top:27px}.lf-footer-note p{margin:0;font-size:12px}.lf-footer-note svg,.lf-privacy svg,.lf-safety svg{flex-shrink:0}
+.lf-notice{background:#e9f6ed;border:1px solid #bcd8c5;border-radius:11px;color:#276246;padding:13px;margin:13px 0;font-size:13px}
+.lf-error{background:#fff2ed;border:1px solid #f1c7b8;border-radius:11px;color:#9b442b;padding:12px;margin:10px 0;font-size:13px}
+.lf-back{display:inline-flex;align-items:center;gap:8px;color:#3b7662;padding:8px 0;margin-bottom:16px;font-size:13px;font-weight:800}
+.lf-editor{max-width:850px;margin:auto}.lf-editor h2,.lf-detail-view h2{color:#285b4e;font-size:29px}
+.lf-form{display:grid;gap:18px}.lf-form label,.lf-modal label{display:grid;gap:7px;font-size:13px;color:#3b6855;font-weight:700;min-width:0}
+.lf-form input,.lf-form select,.lf-form textarea,.lf-modal input,.lf-modal textarea{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #d6e3da;background:#fbfcfa;color:#263e33;min-width:0;font:inherit;font-weight:500}
+.lf-form textarea,.lf-modal textarea{resize:vertical}
+.lf-fields-two{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.lf-upload{padding:18px;border:1px dashed #9fbcaa;border-radius:14px;background:#fafcf9}
+.lf-upload strong{display:flex;align-items:center;gap:7px;color:#285b4e;font-size:14px}
+.lf-upload p{font-size:12px;margin:8px 0 13px}
+.lf-thumbnails{display:flex;flex-wrap:wrap;gap:12px}
+.lf-thumb{width:116px;height:116px;position:relative;border:1px solid #d7e3da;border-radius:12px;overflow:hidden}
+.lf-thumb img{width:100%;height:100%;object-fit:cover}.lf-thumb button{position:absolute;right:5px;top:5px;border-radius:9px;background:#fff;padding:7px;box-shadow:0 1px 9px #0002}
+.lf-upload-add{border:1px solid #b4cbb9;border-radius:12px;min-width:116px;min-height:116px;display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;background:#edf5ee;font-size:11px!important}
+.lf-upload-add input{display:none}.lf-upload small{display:block;margin-top:10px;color:#72887c}
+.lf-editor-actions,.lf-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.lf-detail-heading{display:flex;justify-content:space-between;align-items:start;gap:15px}
+.lf-detail-heading h2{margin:10px 0 6px}.lf-detail-heading p{display:flex;align-items:center;gap:6px;font-size:13px}
+.lf-gallery{display:flex;gap:12px;overflow-x:auto;margin:18px 0 22px;max-height:370px}
+.lf-gallery img{max-width:100%;height:290px;width:auto;object-fit:contain;border-radius:14px;background:#f1f5f0}
+.lf-detail-info{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:24px}
+.lf-detail-info>div{background:#f8faf7;border:1px solid #e4ece5;border-radius:12px;padding:12px;min-width:0}
+.lf-detail-info strong,.lf-detail-info span{display:block;font-size:12px;overflow-wrap:anywhere}.lf-detail-info strong{color:#759081;margin-bottom:5px}.lf-detail-info span{color:#294d3c;font-weight:700}
+.lf-detail-view h3{font-size:16px;color:#2b5a49;margin-bottom:6px}.lf-detail-view p{font-size:14px}
+.lf-note{background:#f9f4ed;padding:11px 14px;border-radius:10px;display:flex;gap:10px;align-items:center;color:#755e48!important}
+.lf-tips{margin-top:24px;border-top:1px solid #e4ede4;padding-top:20px}
+.lf-tips article{padding:13px;border-radius:11px;background:#f7faf7;margin:10px 0;border:1px solid #e8eee9}.lf-tips article p{margin-bottom:8px}.lf-tips article small{color:#668174}
+.lf-modal-backdrop{position:fixed;inset:0;z-index:70;background:#0e231dbb;display:flex;align-items:center;justify-content:center;padding:15px;overflow:auto}
+.lf-modal{width:min(520px,100%);max-height:95vh;overflow:auto;border-radius:19px;padding:26px;background:#fff}
+.lf-modal h2{font-size:24px;color:#285b4e}.lf-modal form{display:grid;gap:15px}
+@media(max-width:930px){.lf-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.lf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.lf-choices,.lf-grid,.lf-fields-two,.lf-detail-info{grid-template-columns:1fr}.lf-choices{gap:11px}.lf-choice{padding:20px}.lf-filters{grid-template-columns:1fr}.lf-filter-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}.lf-filter-tabs button{white-space:nowrap}.lf-panel{padding:17px}.lf-detail-heading{flex-direction:column}.lf-gallery img{height:230px}.lf-actions button,.lf-editor-actions button{flex:1}.lf-modal{padding:20px}}
