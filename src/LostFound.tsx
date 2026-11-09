@@ -116,6 +116,9 @@ export default function LostFound({user,onLogin}:Props){
   setChosenId(null);setDetail(null);setEditor({type});setNotice('')
  }
  const onSaved=()=>{
+  const url=new URL(window.location.href)
+  url.searchParams.delete('alert');url.searchParams.set('pagina','perdidos-encontrados')
+  window.history.replaceState({},'',url.pathname+url.search)
   setEditor(null);setChosenId(null);setDetail(null);setRefresh(x=>x+1)
   setFilter('mine');setNotice('Alerta salvo! Cães e gatos são publicados; outras espécies aguardam revisão.')
  }
@@ -195,7 +198,7 @@ export default function LostFound({user,onLogin}:Props){
      <button type="button" className="secondary" onClick={()=>share(detail)}><Share2 size={17}/> Compartilhar link</button>
      {detail.status==='active'&&detail.moderation_status==='approved'&&detail.owner_id!==user?.id&&
       <button type="button" className="primary" onClick={()=>user?(setContact(true),setTipError('')):onLogin()}><MessageCircle size={17}/>{detail.alert_type==='lost'?'Tenho informações':'Pode ser meu pet'}</button>}
-     {user?.id===detail.owner_id&&<><button className="secondary" onClick={()=>{setEditor({type:detail.alert_type,editing:detail});setChosenId(null)}}>Editar anúncio</button>{detail.status==='active'&&<button disabled={working} className="primary" onClick={()=>updateStatus('resolved')}><CheckCircle2 size={17}/> Marcar reencontrado</button>}{detail.status!=='archived'&&<button disabled={working} className="secondary" onClick={()=>updateStatus('archived')}><Trash2 size={17}/> Arquivar</button>}</>}
+     {user?.id===detail.owner_id&&<><button className="secondary" onClick={()=>{const url=new URL(window.location.href);url.searchParams.delete('alert');url.searchParams.set('pagina','perdidos-encontrados');window.history.replaceState({},'',url.pathname+url.search);setEditor({type:detail.alert_type,editing:detail});setChosenId(null)}}>Editar anúncio</button>{detail.status==='active'&&<button disabled={working} className="primary" onClick={()=>updateStatus('resolved')}><CheckCircle2 size={17}/> Marcar reencontrado</button>}{detail.status!=='archived'&&<button disabled={working} className="secondary" onClick={()=>updateStatus('archived')}><Trash2 size={17}/> Arquivar</button>}</>}
     </div>
     {detail.moderation_status==='pending'&&user?.id===detail.owner_id&&<p className="lf-note">Este alerta está aguardando revisão e ainda não é exibido ao público.</p>}
     {user?.id===detail.owner_id&&tips.length>0&&<div className="lf-tips"><h3>Informações recebidas ({tips.length})</h3>{tips.map(t=><article key={t.id}><p>{t.message}</p><small>{t.approximate_area?('Região informada: '+t.approximate_area+' · '):''}{t.sighting_date?'Avistamento: '+displayDate(t.sighting_date)+' · ':''}Enviado em {new Date(t.created_at).toLocaleDateString('pt-BR')}</small></article>)}</div>}
