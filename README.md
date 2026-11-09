@@ -373,3 +373,67 @@ cadastrar novas contas ou animais em Fernandópolis.
 **Teste rápido após deploy:** selecionar Fernandópolis, digitar Jardim Santa Rita
 no cadastro, voltar ao catálogo e filtrar por esse bairro. Confirmar que
 Brasília/DF e as RAs continuam normais.
+
+
+## DIFF 007.1 + 007.2 — Central de Pets Perdidos e Encontrados
+
+**Módulo novo, independente de adoção.** O aplicativo ganha:
+- Menu `Perdidos` (também acessível pela home), responsivo.
+- Escolha `Perdi meu pet` / `Encontrei um pet`.
+- Cadastro por espécie e por cidade: Brasília/DF (RAs) ou Fernandópolis/SP (bairros).
+- Upload entre **1 e 3 fotos**, com arquivos JPG/PNG/WebP de até **5 MB originais**,
+  convertidos no browser para JPEG otimizado com limite de **2 MB processados**.
+- Mural com abas Todos, Perdidos, Encontrados, Reencontrados e Meus alertas;
+  filtros por cidade, bairro/RA, categoria e pesquisa textual.
+- Página individual compartilhável `https://www.caonect.com.br/?alert=<id>`.
+- Envio privado de informações/avistamentos (somente titular e emissor podem ler).
+- Edição, arquivamento e marcação de reencontro pelo titular.
+- Espécies diferentes de cão/gato ficam com `moderation_status=pending`
+  e não aparecem publicamente até existir aprovação administrativa.
+
+### ATIVAÇÃO OBRIGATÓRIA
+
+1. Abra `supabase/diff-0071-perdidos-encontrados.sql` no GitHub e execute
+   **todo o script** no SQL Editor do mesmo projeto Supabase do Cãonect.
+2. Confirme `Success. No rows returned`.
+3. Confira GitHub Actions → deploy verde; o frontend faz referência às
+   tabelas novas e ao bucket `lost-found-photos`.
+4. Teste primeiro com uma conta de demonstração e um alerta claramente fictício.
+5. Publique um alerta de Perdido e outro de Encontrado; verifique **3 fotos no
+   máximo**, cidade, características e acesso individual.
+6. Confira outro navegador anônimo, o compartilhamento de link, a tela
+   `Meus alertas` e a autorização de edição apenas pelo responsável.
+7. Teste `Tenho informações` com uma segunda conta; confirme que somente
+   titular e emissor veem a informação.
+8. Marque um alerta de teste como Reencontrado e confira sua aparição na aba
+   correspondente. Revise e arquive os testes posteriormente.
+
+**Não há nenhum outro SQL a executar nesta etapa.** Não altera usuários,
+pets de adoção, histórico de chat, Match ou pagamentos.
+
+### Privacidade, limites e segurança
+- Não cadastramos coordenadas GPS, CPF, telefone ou endereço residencial exato.
+  A localização pública é apenas aproximada. Evite informações identificáveis
+  no texto e nas imagens.
+- As fotos ficam em um **bucket público** para que alertas possam circular.
+  O browser converte as imagens para JPEG e remove metadados no fluxo normal,
+  porém **não há processamento sanitizante no servidor**. Antes de divulgação
+  ampla, recomenda-se uma função de ingestão em backend para garantir remoção
+  de EXIF e moderação de fotos. Não prometa proteção completa de metadados.
+- Há RLS para anúncios e informações privadas de avistamento; apenas
+  usuários autenticados publicam e enviam avisos.
+- Publicação imediata de cães/gatos neste piloto não equivale a verificação
+  de identidade do autor nem prova de propriedade; faltam denúncia, antifraude
+  e painel de moderação para lançamento em larga escala.
+- Não exiba telefone e não faça entrega do animal sem verificação de vínculo.
+- Links de alerta utilizam **query string** e funcionam no GitHub Pages,
+  sem depender de reescrita de URL.
+- Ao navegar por `Meus alertas`, o usuário também vê os anúncios pendentes
+  e arquivados de sua conta.
+
+### Próxima etapa (NÃO inclusa)
+**DIFF 007.3 — Story 1080×1920** com foto real, logo, QR Code gerado a partir
+do link do alerta e compartilhamento via Web Share API com download
+alternativo. O PWA não pode prometer publicação automática no Instagram.
+Depois: alertas de vizinhança, identificação de possíveis correspondências,
+moderação, denúncias e verificação de autoria.
