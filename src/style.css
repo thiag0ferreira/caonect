@@ -50,3 +50,12 @@ html,body,#root{min-height:100%;width:100%}
 .category-buttons button strong{font-size:12px;text-align:center;line-height:1.35}
 @media(max-width:900px){.category-buttons{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:500px){.category-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.category-buttons button{min-height:92px}}
+
+/* DIFF 007: chamada da central e menu inferior enxuto com cinco acessos. */
+.lf-home-promo{background:linear-gradient(135deg,#f8f2e8,#e7f2e9)}
+.lf-home-promo .section{padding-top:38px;padding-bottom:38px;display:flex;align-items:center;justify-content:space-between;gap:25px}
+.lf-home-promo h2{color:#285B4E;margin:7px 0}
+.lf-home-promo p{max-width:640px;font-size:14px;margin:0}
+.lf-home-promo .primary{flex-shrink:0}
+.bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:700px){.lf-home-promo .section{flex-direction:column;align-items:stretch;gap:16px}}
