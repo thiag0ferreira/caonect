@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useState,type FormEvent} from 'react'
 import type {User} from '@supabase/supabase-js'
-import {ArrowLeft,CalendarDays,Camera,CheckCircle2,HeartHandshake,Info,MapPin,MessageCircle,Plus,Search,Share2,ShieldCheck,Trash2} from 'lucide-react'
+import {ArrowLeft,CalendarDays,Camera,CheckCircle2,HeartHandshake,Info,MapPin,MessageCircle,Plus,Search,Share2,ShieldCheck,Trash2,Flag} from 'lucide-react'
 import {supabase,isBackendReady} from './supabase'
 import {SUPPORTED_CITIES,FERNANDOPOLIS_AREAS,stateForCity} from './supportedLocations'
 import {RAS} from './dfRegions'
@@ -38,6 +38,12 @@ export default function LostFound({user,onLogin}:Props){
  const [tips,setTips]=useState<LostFoundTip[]>([])
  const [tipBusy,setTipBusy]=useState(false)
  const [tipError,setTipError]=useState('')
+ const [reportOpen,setReportOpen]=useState(false)
+ const [reportReason,setReportReason]=useState('spam')
+ const [reportDetails,setReportDetails]=useState('')
+ const [reportError,setReportError]=useState('')
+ const [reportBusy,setReportBusy]=useState(false)
+ const [reported,setReported]=useState(false)
 
  useEffect(()=>{
   if(!supabase){setLoading(false);setError('Conexão com o Supabase indisponível.');return}
@@ -77,10 +83,19 @@ export default function LostFound({user,onLogin}:Props){
  },[])
 
  useEffect(()=>{
-  if(!detail||!user||detail.owner_id!==user.id||!supabase){setTips([]);return}
+  if(!detail||!user||!supabase){setTips([]);return}
   let active=true
   supabase.from('lost_found_tips').select('*').eq('alert_id',detail.id).order('created_at',{ascending:false})
-   .then(({data})=>{if(active)setTips((data||[]) as LostFoundTip[])})
+   .then(({data,error})=>{if(active){setTips(error?[]:(data||[]) as LostFoundTip[]);if(error)setNotice('Não foi possível carregar informações privadas.')}})
+  return()=>{active=false}
+ },[detail?.id,user?.id,refresh])
+
+ useEffect(()=>{
+  if(!detail||!user||!supabase||detail.owner_id===user.id){setReported(false);return}
+  let active=true
+  setReported(false)
+  supabase.from('lost_found_reports').select('id').eq('alert_id',detail.id).eq('reporter_id',user.id).limit(1)
+    .then(({data})=>{if(active)setReported(!!data?.length)})
   return()=>{active=false}
  },[detail?.id,user?.id,refresh])
 
@@ -103,13 +118,13 @@ export default function LostFound({user,onLogin}:Props){
   const url=new URL(window.location.href)
   url.searchParams.set('alert',alert.id);url.searchParams.delete('pagina')
   window.history.pushState({},'',url.pathname+url.search)
-  setChosenId(alert.id);setEditor(null);setContact(false);setNotice('');window.scrollTo({top:0,behavior:'smooth'})
+  setChosenId(alert.id);setEditor(null);setContact(false);setReportOpen(false);setNotice('');window.scrollTo({top:0,behavior:'smooth'})
  }
  const closeDetail=()=>{
   const url=new URL(window.location.href)
   url.searchParams.delete('alert');url.searchParams.set('pagina','perdidos-encontrados')
   window.history.pushState({},'',url.pathname+url.search)
-  setChosenId(null);setDetail(null);setContact(false);setNotice('')
+  setChosenId(null);setDetail(null);setContact(false);setReportOpen(false);setNotice('')
  }
  const create=(type:AlertType)=>{
   if(!user){onLogin();return}
@@ -162,7 +177,24 @@ export default function LostFound({user,onLogin}:Props){
   setTipBusy(false)
   if(error){setTipError('Não foi possível enviar: '+error.message);return}
   setContact(false);setTipMessage('');setTipArea('');setTipDate('')
-  setNotice('Informação enviada com segurança ao responsável pelo alerta.')
+  setNotice('Informação registrada. Ela ficará visível para você e o responsável pelo alerta.')
+  setRefresh(n=>n+1)
+ }
+ const sendReport=async(e:FormEvent)=>{
+  e.preventDefault()
+  if(!supabase||!detail||!user||detail.owner_id===user.id)return
+  if(reportReason==='other'&&reportDetails.trim().length<10){setReportError('Explique o motivo com pelo menos 10 caracteres.');return}
+  setReportBusy(true);setReportError('')
+  const {error}=await supabase.from('lost_found_reports').insert({alert_id:detail.id,reporter_id:user.id,reason:reportReason,details:reportDetails.trim()})
+  setReportBusy(false)
+  if(error){
+   if(error.code==='23505'){
+    setReported(true);setReportOpen(false);setNotice('Você já enviou uma denúncia deste anúncio.')
+   }else setReportError('Não foi possível registrar a denúncia: '+error.message)
+   return
+  }
+  setReportOpen(false);setReported(true);setReportDetails('');setReportReason('spam')
+  setNotice('Denúncia registrada para revisão manual. Nenhum anúncio é bloqueado automaticamente nesta etapa.')
  }
  if(!isBackendReady)return <section className="section page"><h1>Pets Perdidos e Encontrados</h1><p>O serviço de dados não está configurado neste ambiente.</p></section>
  return <section className="section page lf-page">
@@ -198,12 +230,38 @@ export default function LostFound({user,onLogin}:Props){
      <button type="button" className="secondary" onClick={()=>share(detail)}><Share2 size={17}/> Compartilhar link</button>
      {detail.status==='active'&&detail.moderation_status==='approved'&&detail.owner_id!==user?.id&&
       <button type="button" className="primary" onClick={()=>user?(setContact(true),setTipError('')):onLogin()}><MessageCircle size={17}/>{detail.alert_type==='lost'?'Tenho informações':'Pode ser meu pet'}</button>}
+     {detail.owner_id!==user?.id&&detail.moderation_status==='approved'&&detail.status!=='archived'&&<button type="button" className="secondary lf-report-btn" disabled={reported} onClick={()=>user?(setReportOpen(true),setReportError('')):onLogin()}><Flag size={16}/>{reported?'Denúncia registrada':'Denunciar anúncio'}</button>}
      {user?.id===detail.owner_id&&<><button className="secondary" onClick={()=>{const url=new URL(window.location.href);url.searchParams.delete('alert');url.searchParams.set('pagina','perdidos-encontrados');window.history.replaceState({},'',url.pathname+url.search);setEditor({type:detail.alert_type,editing:detail});setChosenId(null)}}>Editar anúncio</button>{detail.status==='active'&&<button disabled={working} className="primary" onClick={()=>updateStatus('resolved')}><CheckCircle2 size={17}/> Marcar reencontrado</button>}{detail.status!=='archived'&&<button disabled={working} className="secondary" onClick={()=>updateStatus('archived')}><Trash2 size={17}/> Arquivar</button>}</>}
     </div>
     {detail.moderation_status==='pending'&&user?.id===detail.owner_id&&<p className="lf-note">Este alerta está aguardando revisão e ainda não é exibido ao público.</p>}
-    {user?.id===detail.owner_id&&tips.length>0&&<div className="lf-tips"><h3>Informações recebidas ({tips.length})</h3>{tips.map(t=><article key={t.id}><p>{t.message}</p><small>{t.approximate_area?('Região informada: '+t.approximate_area+' · '):''}{t.sighting_date?'Avistamento: '+displayDate(t.sighting_date)+' · ':''}Enviado em {new Date(t.created_at).toLocaleDateString('pt-BR')}</small></article>)}</div>}
+    {user&&tips.length>0&&<div className="lf-tips"><h3>{detail.owner_id===user.id?'Informações recebidas':'Informações que você enviou'} ({tips.length})</h3>{tips.map(t=><article key={t.id}><p>{t.message}</p><small>{t.approximate_area?('Região informada: '+t.approximate_area+' · '):''}{t.sighting_date?'Avistamento: '+displayDate(t.sighting_date)+' · ':''}Enviado em {new Date(t.created_at).toLocaleDateString('pt-BR')}</small></article>)}</div>}
     {notice&&<p role="status" className="lf-notice">{notice}</p>}
     {contact&&<div className="lf-modal-backdrop" onClick={()=>setContact(false)}><div className="lf-modal" role="dialog" aria-modal="true" aria-label="Enviar informações" onClick={e=>e.stopPropagation()}><h2>{detail.alert_type==='lost'?'Tenho informações':'Pode ser meu pet'}</h2><p>Sua mensagem ficará disponível apenas para você e o responsável pelo anúncio. Não envie documentos ou endereço residencial.</p><form onSubmit={sendTip}><label>O que você sabe? *<textarea required minLength={10} maxLength={1500} rows={5} value={tipMessage} onChange={e=>setTipMessage(e.target.value)}/></label><label>Região aproximada (opcional)<input maxLength={160} value={tipArea} onChange={e=>setTipArea(e.target.value)}/></label><label>Data do avistamento (opcional)<input type="date" max={new Date().toISOString().slice(0,10)} value={tipDate} onChange={e=>setTipDate(e.target.value)}/></label>{tipError&&<p className="lf-error" role="alert">{tipError}</p>}<div className="lf-actions"><button type="button" className="secondary" onClick={()=>setContact(false)}>Cancelar</button><button disabled={tipBusy} type="submit" className="primary">{tipBusy?'Enviando...':'Enviar informação'}</button></div></form></div></div>}
+
+    {reportOpen&&<div className="lf-modal-backdrop" onClick={()=>setReportOpen(false)}>
+      <div className="lf-modal" role="dialog" aria-modal="true" aria-label="Denunciar anúncio" onClick={e=>e.stopPropagation()}>
+       <h2>Denunciar anúncio</h2>
+       <p>Se você identificou uma publicação inadequada, registre a ocorrência. A denúncia será armazenada para análise manual e não remove o anúncio automaticamente.</p>
+       <form onSubmit={sendReport}>
+        <label>Motivo da denúncia *
+         <select required value={reportReason} onChange={e=>setReportReason(e.target.value)}>
+          <option value="spam">Spam ou publicidade</option>
+          <option value="fraud">Suspeita de fraude</option>
+          <option value="abuse">Conteúdo ofensivo ou maus-tratos</option>
+          <option value="privacy">Exposição de dados pessoais</option>
+          <option value="misinformation">Informações falsas sobre o animal</option>
+          <option value="other">Outro motivo</option>
+         </select>
+        </label>
+        <label>Explique o que aconteceu {reportReason==='other'?'*':'(opcional)'}
+         <textarea rows={4} maxLength={600} required={reportReason==='other'} value={reportDetails} onChange={e=>setReportDetails(e.target.value)} placeholder="Relate de forma objetiva, sem documentos ou dados sensíveis."/>
+        </label>
+        <p className="lf-safety"><ShieldCheck size={16}/> O responsável pelo anúncio não verá quem fez a denúncia nesta interface. O registro será revisado manualmente.</p>
+        {reportError&&<p className="lf-error" role="alert">{reportError}</p>}
+        <div className="lf-actions"><button type="button" className="secondary" onClick={()=>setReportOpen(false)}>Cancelar</button><button type="submit" className="primary" disabled={reportBusy}>{reportBusy?'Enviando...':'Registrar denúncia'}</button></div>
+       </form>
+      </div>
+     </div>}
    </article>}
   </div>:
   <>

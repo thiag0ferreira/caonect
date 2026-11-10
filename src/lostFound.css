@@ -65,3 +65,10 @@
 .lf-modal h2{font-size:24px;color:#285b4e}.lf-modal form{display:grid;gap:15px}
 @media(max-width:930px){.lf-filters{grid-template-columns:repeat(2,minmax(0,1fr))}.lf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.lf-choices,.lf-grid,.lf-fields-two,.lf-detail-info{grid-template-columns:1fr}.lf-choices{gap:11px}.lf-choice{padding:20px}.lf-filters{grid-template-columns:1fr}.lf-filter-tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}.lf-filter-tabs button{white-space:nowrap}.lf-panel{padding:17px}.lf-detail-heading{flex-direction:column}.lf-gallery img{height:230px}.lf-actions button,.lf-editor-actions button{flex:1}.lf-modal{padding:20px}}
+
+/* DIFF 007.2.1 — proteção e comunicação */
+.lf-modal select{width:100%;padding:12px 14px;border-radius:10px;border:1px solid #d6e3da;background:#fbfcfa;color:#263e33;font:inherit;min-width:0}
+.lf-report-btn{color:#835f53!important;border-color:#e4cdc2!important}
+.lf-report-btn:disabled{opacity:.65;cursor:not-allowed}
+.lf-tips article{overflow-wrap:anywhere;word-break:break-word}
+.lf-modal .lf-safety{font-size:12px;margin:4px 0;line-height:1.5}
