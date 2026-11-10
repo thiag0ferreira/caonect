@@ -437,3 +437,26 @@ do link do alerta e compartilhamento via Web Share API com download
 alternativo. O PWA não pode prometer publicação automática no Instagram.
 Depois: alertas de vizinhança, identificação de possíveis correspondências,
 moderação, denúncias e verificação de autoria.
+
+
+### DIFF 007.1B — Correção de GRANTs no Supabase
+
+Se a nova página `Perdidos` apresentar
+`permission denied for table lost_found_alerts` apesar da execução bem-sucedida
+da migração 007.1, execute **somente**
+[`supabase/diff-0071b-fix-permissions.sql`](supabase/diff-0071b-fix-permissions.sql)
+no SQL Editor do mesmo projeto Supabase.
+
+O patch concede `SELECT` a `anon` no mural,
+`SELECT/INSERT/UPDATE/DELETE` a `authenticated` nos anúncios e somente
+`SELECT/INSERT` a `authenticated` nas informações de avistamentos.
+As políticas de RLS existentes continuam habilitadas e restringem o acesso
+a registros conforme proprietário, estado de moderação e papéis.
+
+Ao final, todas as colunas da consulta de verificação deverão retornar
+`true`. O patch não remove registros, não pede chaves privadas e
+não exige nova compilação do frontend na Cloudflare.
+
+O script-base `diff-0071-perdidos-encontrados.sql` também foi atualizado
+para conter os GRANTs em novas instalações. Em projetos onde 007.1 já
+rodou, execute apenas o patch 007.1B.
