@@ -187,6 +187,15 @@ with check (
   )
 );
 
+-- É necessário conceder privilégios SQL além de ativar políticas RLS.
+-- Sem estes GRANTs, o PostgREST retorna "permission denied for table
+-- lost_found_alerts" mesmo com as políticas corretas.
+grant usage on schema public to anon, authenticated;
+grant select on public.lost_found_alerts to anon;
+grant select, insert, update, delete on public.lost_found_alerts to authenticated;
+revoke all privileges on public.lost_found_tips from anon;
+grant select, insert on public.lost_found_tips to authenticated;
+
 -- Fotos compartilhadas publicamente não devem conter EXIF.
 -- A remoção acontece no navegador antes do upload.
 -- O armazenamento restringe formato/tamanho; sanitização no servidor será
