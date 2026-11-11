@@ -21,7 +21,7 @@ type AlertRow={
 }
 type ReportRow={
  id:string;alert_id:string;reason:string;details:string;status:string;created_at:string;
- alert_name:string|null;alert_type:string|null;species:string|null;city:string|null;district:string|null;
+ alert_name:string|null;alert_type:string|null;species:string|null;city:string|null;district:string|null;alert_photo_path:string|null;
  alert_status:string|null;alert_moderation:string|null
 }
 type UserRow={id:string;display_name:string;role:string;city:string;district:string;created_at:string;pets_count:number;alerts_count:number}
@@ -170,7 +170,7 @@ export default function AdminPanel({user,onLogin}:{user:User|null;onLogin:()=>vo
        </div>
       </article>)}
       {section==='reports'&&(filtered as ReportRow[]).map(r=><article className="ca-admin-item ca-admin-report" key={r.id}>
-       <div className="ca-admin-media"><Flag size={32}/></div>
+       <div className="ca-admin-media">{r.alert_photo_path?<img src={lostFoundPhoto(r.alert_photo_path)} alt="Foto do alerta denunciado"/>:<Flag size={32}/>}</div>
        <div className="ca-admin-info">
         <div className="ca-admin-title"><strong>Denúncia: {r.alert_name||'Animal encontrado'}</strong><span className={'ca-admin-badge '+r.status}>{statuses[r.status]||r.status}</span></div>
         <p>Motivo: {r.reason} · {r.city||'Cidade não informada'} · {date(r.created_at)}</p>
@@ -180,6 +180,7 @@ export default function AdminPanel({user,onLogin}:{user:User|null;onLogin:()=>vo
         <div className="ca-admin-actions">
          {r.status!=='reviewed'&&<button type="button" onClick={()=>start('report',r.id,'reviewed',r.alert_name||'denúncia')}>Marcar analisada</button>}
          {r.status!=='dismissed'&&<button type="button" className="danger" onClick={()=>start('report',r.id,'dismissed',r.alert_name||'denúncia')}>Descartar denúncia</button>}
+         {r.alert_id&&r.alert_status!=='archived'&&r.alert_moderation!=='rejected'&&<button type="button" className="danger" onClick={()=>start('alert',r.alert_id,'reject',r.alert_name||'alerta denunciado')}>Ocultar alerta denunciado</button>}
         </div>
        </div>
       </article>)}
