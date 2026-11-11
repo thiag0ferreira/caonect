@@ -66,7 +66,7 @@ async function renderPoster(alert:LostFoundAlert,format:Format):Promise<Blob>{
  ctx.fillStyle=palette.dark
  textFit(ctx,name,895,82,44)
  ctx.fillText(name,86,story?408:340)
- const photoY=story?467:389,photoH=story?745:528
+ const photoY=story?467:389,photoH=story?745:440
  cover(ctx,image,72,photoY,936,photoH,30)
  const bottom=photoY+photoH
  ctx.fillStyle=palette.green
@@ -78,13 +78,14 @@ async function renderPoster(alert:LostFoundAlert,format:Format):Promise<Blob>{
  ctx.fillText(alert.alert_type==='lost'?'Ajude esta família a reencontrar seu pet.':'Ajude a encontrar a família deste animal.',80,bottom+(story?130:106))
  const qr=document.createElement('canvas')
  await QRCode.toCanvas(qr,link,{width:280,margin:1,errorCorrectionLevel:'M',color:{dark:'#173F33',light:'#FFFFFF'}})
- const qrY=story?1470:1040
- rounded(ctx,73,qrY-23,340,340,26,'#FFFFFF')
- ctx.drawImage(qr,102,qrY+5,281,281)
+ const qrY=story?1470:980
+ const qrBlock=story?340:235,qrSize=story?281:194
+ rounded(ctx,73,qrY-23,qrBlock,qrBlock,26,'#FFFFFF')
+ ctx.drawImage(qr,story?102:94,qrY+5,qrSize,qrSize)
  ctx.fillStyle=palette.dark;ctx.font='bold 40px Arial, sans-serif'
- drawLines(ctx,'ESCANEIE E AJUDE',446,qrY+83,570,51,2)
+ drawLines(ctx,'ESCANEIE E AJUDE',story?446:348,qrY+(story?83:54),story?570:655,51,2)
  ctx.font='30px Arial, sans-serif';ctx.fillStyle=palette.brown
- drawLines(ctx,'Veja as fotos e compartilhe o anúncio.',446,qrY+177,550,40,2)
+ drawLines(ctx,'Veja as fotos e compartilhe o anúncio.',story?446:348,qrY+(story?177:137),story?550:660,40,2)
  ctx.fillStyle=palette.green;ctx.fillRect(0,H-94,W,94)
  ctx.fillStyle='#FFFFFF';ctx.font='bold 29px Arial, sans-serif'
  ctx.textAlign='center';ctx.fillText('Cãonect • Encontros que viram família',W/2,H-38)
