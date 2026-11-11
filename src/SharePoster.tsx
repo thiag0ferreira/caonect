@@ -58,44 +58,47 @@ async function renderPoster(alert:LostFoundAlert,format:Format):Promise<Blob>{
  ctx.fillStyle=palette.green;ctx.fillRect(0,0,W,24)
  ctx.fillStyle=palette.mint;ctx.beginPath();ctx.arc(1000,110,105,0,2*Math.PI);ctx.fill()
  ctx.textAlign='left';ctx.fillStyle=palette.green
- if(logo)ctx.drawImage(logo,79,story?113:65,110,73)
- ctx.font='bold 49px Arial, sans-serif';ctx.fillText('Cãonect',204,story?165:112)
- ctx.fillStyle=palette.brown;ctx.font='25px Arial, sans-serif';ctx.fillText('Encontros que viram família',204,story?206:154)
+ if(logo)ctx.drawImage(logo,79,story?256:65,110,73)
+ ctx.font='bold 49px Arial, sans-serif';ctx.fillText('Cãonect',204,story?308:112)
+ ctx.fillStyle=palette.brown;ctx.font='25px Arial, sans-serif';ctx.fillText('Encontros que viram família',204,story?349:154)
  const tag=alert.alert_type==='lost'?'PROCURA-SE • PET PERDIDO':'VOCÊ CONHECE ESTE PET?'
- rounded(ctx,85,story?270:196,story?490:590,67,24,alert.alert_type==='lost'?palette.terracotta:palette.green)
- ctx.fillStyle='#fff';ctx.font='bold 27px Arial, sans-serif';ctx.fillText(tag,110,story?312:239)
+ rounded(ctx,85,story?389:196,story?490:590,67,24,alert.alert_type==='lost'?palette.terracotta:palette.green)
+ ctx.fillStyle='#fff';ctx.font='bold 27px Arial, sans-serif';ctx.fillText(tag,110,story?431:239)
  const name=alert.pet_name?.trim()||(alert.alert_type==='found'?'Animal encontrado':'Pet desaparecido')
  ctx.fillStyle=palette.dark
  textFit(ctx,name,895,82,44)
  let displayName=name
  while(displayName.length>3&&ctx.measureText(displayName).width>905)displayName=displayName.slice(0,-2)
  if(displayName!==name)displayName=displayName.trim()+'…'
- ctx.fillText(displayName,86,story?408:340)
- const photoY=story?467:389,photoH=story?745:440
+ ctx.fillText(displayName,86,story?530:340)
+ const photoY=story?565:389,photoH=story?525:440
  cover(ctx,image,72,photoY,936,photoH,30)
  const bottom=photoY+photoH
  ctx.fillStyle=palette.green
  ctx.font='bold 39px Arial, sans-serif'
  const loc=alert.district+' • '+alert.city+'/'+stateForCity(alert.city)
  textFit(ctx,loc,918,37,25,'700')
- ctx.fillText(loc,78,bottom+(story?79:66))
+ ctx.fillText(loc,78,bottom+(story?69:66))
  ctx.fillStyle='#65786E';ctx.font='28px Arial, sans-serif'
- ctx.fillText(alert.alert_type==='lost'?'Ajude esta família a reencontrar seu pet.':'Ajude a encontrar a família deste animal.',80,bottom+(story?130:106))
+ ctx.fillText(alert.alert_type==='lost'?'Ajude esta família a reencontrar seu pet.':'Ajude a encontrar a família deste animal.',80,bottom+(story?115:106))
  const qr=document.createElement('canvas')
  await QRCode.toCanvas(qr,link,{width:280,margin:1,errorCorrectionLevel:'M',color:{dark:'#173F33',light:'#FFFFFF'}})
- const qrY=story?1470:980
- const qrBlock=story?340:235,qrSize=story?281:194
+ const qrY=story?1315:980
+ const qrBlock=story?245:235,qrSize=story?208:194
  rounded(ctx,73,qrY-23,qrBlock,qrBlock,26,'#FFFFFF')
- ctx.drawImage(qr,story?102:94,qrY+5,qrSize,qrSize)
+ ctx.drawImage(qr,story?92:94,qrY+5,qrSize,qrSize)
  ctx.fillStyle=palette.dark;ctx.font='bold 40px Arial, sans-serif'
- drawLines(ctx,'ESCANEIE E AJUDE',story?446:348,qrY+(story?83:54),story?570:655,51,2)
+ drawLines(ctx,'ESCANEIE E AJUDE',story?358:348,qrY+(story?75:54),story?640:655,51,2)
  ctx.font='30px Arial, sans-serif';ctx.fillStyle=palette.brown
- drawLines(ctx,'Veja as fotos e compartilhe o anúncio.',story?446:348,qrY+(story?177:137),story?550:660,40,2)
+ drawLines(ctx,'Veja as fotos e compartilhe o anúncio.',story?358:348,qrY+(story?153:137),story?640:660,40,2)
  ctx.fillStyle=palette.green;ctx.font='bold 26px Arial, sans-serif'
- ctx.fillText(new URL(link).hostname,story?446:348,qrY+(story?255:209))
- ctx.fillStyle=palette.green;ctx.fillRect(0,H-94,W,94)
+ ctx.fillText(new URL(link).hostname,story?358:348,qrY+(story?221:209))
+ // Faixas de segurança do Instagram: controles na parte superior e inferior.
+ // No formato Story, nenhum texto ou QR Code fica nos 250px finais.
+ const footerY=story?1605:H-94
+ ctx.fillStyle=palette.green;ctx.fillRect(0,footerY,W,story?74:94)
  ctx.fillStyle='#FFFFFF';ctx.font='bold 29px Arial, sans-serif'
- ctx.textAlign='center';ctx.fillText('Cãonect • Encontros que viram família',W/2,H-38)
+ ctx.textAlign='center';ctx.fillText('Cãonect • Encontros que viram família',W/2,footerY+(story?47:56))
  return await new Promise<Blob>((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('Não foi possível salvar o cartaz.')),'image/png'))
 }
 
@@ -153,7 +156,7 @@ export default function SharePoster({alert,onClose}:Props){
    </div>
    {message&&<p className="lf-notice" role="status">{message}</p>}
    <p className="lf-share-footnote"><Instagram size={15}/> No Instagram, publique a imagem salva como Story ou Feed. O compartilhamento automático depende dos aplicativos disponíveis no celular.</p>
-   <p className="lf-share-footnote"><ShieldCheck size={15}/> O QR Code usa o endereço deste anúncio. Enquanto o domínio oficial estiver em migração, use o cartaz de teste somente quando for necessário; o endereço pages.dev continuará válido.</p>
+   <p className="lf-share-footnote"><ShieldCheck size={15}/> O QR Code sempre direciona para o anúncio no domínio oficial www.caonect.com.br. Use apenas informações públicas.</p>
   </div>
  </div>
 }
