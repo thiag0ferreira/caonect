@@ -150,7 +150,7 @@ begin
   end if;
  elsif (select auth.uid()) is not null and not (
    current_user='postgres'
-   and current_setting('caonect.admin_action',true)='on'
+   and coalesce(current_setting('caonect.admin_action',true),'')='on'
  ) then
   if new.review_status is distinct from old.review_status then
    raise exception 'A revisão do anúncio não pode ser alterada pelo anunciante';
@@ -192,7 +192,7 @@ begin
   if (select auth.uid()) is not null
      and new.moderation_status is distinct from old.moderation_status
      and not (current_user='postgres'
-         and current_setting('caonect.admin_action',true)='on') then
+         and coalesce(current_setting('caonect.admin_action',true),'')='on') then
    raise exception 'Somente a moderação pode alterar a análise do alerta';
   end if;
   if old.status='resolved' and new.status='active' then
@@ -214,7 +214,7 @@ begin
  elsif tg_op='UPDATE'
     and new.category not in ('Cachorros','Gatos')
     and (select auth.uid()) is not null
-    and not (current_user='postgres' and current_setting('caonect.admin_action',true)='on')
+    and not (current_user='postgres' and coalesce(current_setting('caonect.admin_action',true),'')='on')
     and (
      new.description is distinct from old.description or
      new.characteristics is distinct from old.characteristics or
