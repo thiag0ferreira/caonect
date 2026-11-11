@@ -3,6 +3,8 @@ import {createRoot} from 'react-dom/client'
 import {Heart,Search,House,UserRound,ClipboardList,ArrowRight,ShieldCheck,Sparkles,X,Menu,PawPrint,MessageCircle,HeartHandshake} from 'lucide-react'
 import CommunityPets from './CommunityPets'
 import LostFound from './LostFound'
+import AdminPanel from './AdminPanel'
+import {supabase} from './supabase'
 import MatchCaonect from './MatchCaonect'
 import ActivityFeed from './ActivityFeed'
 import './activity.css'
@@ -15,15 +17,29 @@ import {Conversations,useCurrentUser} from './Interactions'
 import './style.css'
 import './interactions.css'
 
-type Page='Início'|'Explorar'|'Perdidos'|'Match'|'Favoritos'|'Adoções'|'Perfil'
+type Page='Início'|'Explorar'|'Perdidos'|'Match'|'Favoritos'|'Adoções'|'Perfil'|'Admin'
+const pageFromUrl=():Page=>{
+ const params=new URLSearchParams(window.location.search)
+ return params.has('alert')||params.get('pagina')==='perdidos-encontrados'?'Perdidos':params.get('pagina')==='admin'?'Admin':'Início'
+}
 const nav:{name:Page;icon:ReactNode}[]=[{name:'Início',icon:<House/>},{name:'Explorar',icon:<Search/>},{name:'Perdidos',icon:<HeartHandshake/>},{name:'Match',icon:<Sparkles/>},{name:'Favoritos',icon:<Heart/>},{name:'Adoções',icon:<ClipboardList/>},{name:'Perfil',icon:<UserRound/>}]
 function App(){
- const [page,setPage]=useState<Page>(()=>new URLSearchParams(window.location.search).has('alert')||new URLSearchParams(window.location.search).get('pagina')==='perdidos-encontrados'?'Perdidos':'Início')
+ const [page,setPage]=useState<Page>(pageFromUrl)
  const [cityFilter,setCityFilter]=useState('Todas')
  const [query,setQuery]=useState(''),[location,setLocation]=useState(''),[species,setSpecies]=useState('Todos'),[size,setSize]=useState('Todos'),[menu,setMenu]=useState(false)
  const user=useCurrentUser()
+ const [isAdmin,setIsAdmin]=useState(false)
  useEffect(()=>{
-  const onBack=()=>setPage(new URLSearchParams(window.location.search).has('alert')||new URLSearchParams(window.location.search).get('pagina')==='perdidos-encontrados'?'Perdidos':'Início')
+  if(!user||!supabase){setIsAdmin(false);return}
+  let active=true
+  supabase.rpc('caonect_admin_is_admin').then(({data,error})=>{
+   if(active)setIsAdmin(!error&&data===true)
+  })
+  return()=>{active=false}
+ },[user?.id])
+ const appNav=isAdmin?[...nav,{name:'Admin' as Page,icon:<ShieldCheck/>}]:nav
+ useEffect(()=>{
+  const onBack=()=>setPage(pageFromUrl())
   window.addEventListener('popstate',onBack)
   return()=>window.removeEventListener('popstate',onBack)
  },[])
@@ -34,19 +50,19 @@ function App(){
    window.history.pushState({},'',url.pathname+url.search)
   }else{
    const url=new URL(window.location.href)
-   if(url.searchParams.has('alert')||url.searchParams.has('pagina')){
-    url.searchParams.delete('alert');url.searchParams.delete('pagina')
-    window.history.pushState({},'',url.pathname+url.search)
-   }
+   if(p==='Admin')url.searchParams.set('pagina','admin')
+   else url.searchParams.delete('pagina')
+   url.searchParams.delete('alert')
+   window.history.pushState({},'',url.pathname+url.search)
   }
   setPage(p);setMenu(false);window.scrollTo({top:0,behavior:'smooth'})
  }
  const cardProps={user,onLogin:()=>go('Perfil'),onChat:()=>go('Adoções')}
- const mobileNav=nav.filter(n=>['Início','Explorar','Perdidos','Adoções','Perfil'].includes(n.name))
+ const mobileNav=appNav.filter(n=>['Início','Explorar','Perdidos','Adoções','Perfil'].includes(n.name))
  const selectCity=(value:string)=>{setCityFilter(value);setLocation('')}
  const exploreMatch=(petName:string,city?:string)=>{setQuery(petName);setCityFilter(city||'Todas');setLocation('');setSpecies('Todos');setSize('Todos');go('Explorar')}
  return <div className="app">
- <header className="header"><div className="header-inner"><button className="brand" onClick={()=>go('Início')}><span className="brand-icon"><img src={import.meta.env.BASE_URL+'brand-logo.svg'} alt="Cãonect"/></span><span><strong>Cãonect</strong><small>Encontros que viram família</small></span></button><nav className="desktop-nav">{nav.map(n=><button key={n.name} className={page===n.name?'active':''} onClick={()=>go(n.name)}>{n.name}</button>)}</nav><button className="header-help" onClick={()=>go('Perfil')}>{user?'Minha conta':'Quero ajudar'} <Heart size={16}/></button><button className="menu-toggle" onClick={()=>setMenu(!menu)} aria-label="Abrir menu">{menu?<X/>:<Menu/>}</button></div>{menu&&<nav className="mobile-drop">{nav.map(n=><button key={n.name} onClick={()=>go(n.name)}>{n.name}</button>)}</nav>}</header>
+ <header className="header"><div className="header-inner"><button className="brand" onClick={()=>go('Início')}><span className="brand-icon"><img src={import.meta.env.BASE_URL+'brand-logo.svg'} alt="Cãonect"/></span><span><strong>Cãonect</strong><small>Encontros que viram família</small></span></button><nav className="desktop-nav">{appNav.map(n=><button key={n.name} className={page===n.name?'active':''} onClick={()=>go(n.name)}>{n.name}</button>)}</nav><button className="header-help" onClick={()=>go('Perfil')}>{user?'Minha conta':'Quero ajudar'} <Heart size={16}/></button><button className="menu-toggle" onClick={()=>setMenu(!menu)} aria-label="Abrir menu">{menu?<X/>:<Menu/>}</button></div>{menu&&<nav className="mobile-drop">{appNav.map(n=><button key={n.name} onClick={()=>go(n.name)}>{n.name}</button>)}</nav>}</header>
  <main>
  {page==='Início'&&<><section className="hero"><div className="hero-inner"><div><span className="eyebrow"><Sparkles size={16}/> ADOÇÃO COM PROPÓSITO</span><h1>Um encontro pode <em>mudar duas vidas.</em></h1><p>Seu novo melhor amigo pode estar mais perto do que você imagina. Conheça animais reais esperando um lar.</p><div className="hero-actions"><button className="primary" onClick={()=>go('Explorar')}>Encontrar meu pet <ArrowRight size={18}/></button><button className="secondary" onClick={()=>go('Perfil')}>Quero divulgar um pet</button></div><div className="proof"><span><ShieldCheck size={17}/> Adoção responsável</span><span><Heart size={17}/> Conexões reais</span></div></div><div className="hero-photo"><div className="hero-illustration"><PawPrint size={115}/><span>Uma nova amizade começa aqui ♡</span></div><div className="floating">♥ Um novo amigo te espera!</div></div></div></section>
  <section className="search-wrap"><div className="search-panel"><h2>Quem você está procurando?</h2><div className="search-fields"><label>Nome ou característica<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Ex.: dócil, curioso..." onKeyDown={e=>e.key==='Enter'&&go('Explorar')}/></label><label>Cidade<select value={cityFilter} onChange={e=>selectCity(e.target.value)}><option value="Todas">Todas as cidades</option>{SUPPORTED_CITIES.map(c=><option value={c.city} key={c.city}>{c.label}</option>)}</select></label>{cityFilter==='Brasília'&&<label>Região Administrativa<select value={location} onChange={e=>setLocation(e.target.value)}><option value="">Todas as regiões</option>{RAS.map(ra=><option key={ra} value={ra}>{ra}</option>)}</select></label>}{cityFilter==='Fernandópolis'&&<label>Bairro / região<input list="caonect-areas-home" placeholder="Todos ou digite um bairro" value={location} onChange={e=>setLocation(e.target.value)}/><datalist id="caonect-areas-home">{FERNANDOPOLIS_AREAS.map(area=><option key={area} value={area}/>)}</datalist></label>}<button className="primary" onClick={()=>go('Explorar')}>Buscar pets <Search size={17}/></button></div></div></section>
@@ -60,6 +76,7 @@ function App(){
  {page==='Favoritos'&&<section className="section page"><span className="kicker">GUARDADOS NO CORAÇÃO</span><h1>Meus favoritos</h1><p>{user?'Seus pets favoritos estão salvos na sua conta.':'Entre na sua conta para salvar seus pets favoritos.'}</p>{!user&&<button className="primary" onClick={()=>go('Perfil')}>Entrar ou cadastrar</button>}<CommunityPets mode="favorites" {...cardProps}/></section>}
  {page==='Adoções'&&<Conversations user={user} onLogin={()=>go('Perfil')}/>}
  {page==='Perfil'&&<Portal/>}
+ {page==='Admin'&&<AdminPanel user={user} onLogin={()=>go('Perfil')}/>}
  </main>
  <footer><div className="footer-brand"><img src={import.meta.env.BASE_URL+'brand-logo.svg'} alt="Cão e gato do Cãonect"/><strong>Cãonect ♡</strong></div><span>Encontros que viram família · Adoção responsável</span></footer>
  <nav className="bottom-nav">{mobileNav.map(n=><button className={page===n.name?'active':''} key={n.name} onClick={()=>go(n.name)}>{n.icon}<small>{n.name}</small></button>)}</nav>
