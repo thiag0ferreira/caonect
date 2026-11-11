@@ -84,6 +84,7 @@ begin
    from (
      select r.id,r.alert_id,r.reason,r.details,r.status,r.created_at,
        a.pet_name as alert_name,a.alert_type,a.species,a.city,a.district,
+       a.photo_paths[1] as alert_photo_path,
        a.status as alert_status,a.moderation_status as alert_moderation
      from public.lost_found_reports r
      left join public.lost_found_alerts a on a.id=r.alert_id
