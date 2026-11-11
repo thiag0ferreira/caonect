@@ -25,7 +25,7 @@ type ReportRow={
  alert_status:string|null;alert_moderation:string|null
 }
 type UserRow={id:string;display_name:string;role:string;city:string;district:string;created_at:string;pets_count:number;alerts_count:number}
-type AuditRow={id:number;entity_type:string;entity_id:string;action:string;note:string;previous_state:string|null;next_state:string|null;created_at:string}
+type AuditRow={id:number;actor_id:string;entity_type:string;entity_id:string;action:string;note:string;previous_state:string|null;next_state:string|null;created_at:string}
 type Pending={entity:Entity;id:string;action:Action;label:string;category?:string;origin?:string}
 
 const date=(value:string)=>value?new Date(value).toLocaleDateString('pt-BR'):'—'
@@ -193,7 +193,7 @@ export default function AdminPanel({user,onLogin}:{user:User|null;onLogin:()=>vo
       {section==='audit'&&(filtered as AuditRow[]).map(a=><article className="ca-admin-item ca-admin-audit" key={a.id}>
        <div className="ca-admin-media"><ShieldCheck size={29}/></div>
        <div className="ca-admin-info"><div className="ca-admin-title"><strong>{a.entity_type}: {a.action}</strong><span>{date(a.created_at)}</span></div>
-        <p>{a.note}</p><small>{a.entity_id} · {a.previous_state||'—'} → {a.next_state||'—'}</small>
+        <p>{a.note}</p><small>Responsável: {a.actor_id} · Registro: {a.entity_id} · {a.previous_state||'—'} → {a.next_state||'—'}</small>
        </div>
       </article>)}
      </div>}
