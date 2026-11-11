@@ -60,7 +60,7 @@ As tabelas `caonect_private.admins` e `caonect_private.moderation_audit` ficam e
 
 ## Segurança e limites conhecidos
 
-- Os endpoints expostos são quatro RPCs `caonect_admin_is_admin`, `caonect_admin_dashboard`, `caonect_admin_list` e `caonect_admin_moderate`, mais `caonect_admin_audit`.
+- Os endpoints expostos são cinco RPCs `caonect_admin_is_admin`, `caonect_admin_dashboard`, `caonect_admin_list` e `caonect_admin_moderate`, mais `caonect_admin_audit`.
 - Cada RPC sensível verifica o UID autenticado na tabela privada. `caonect_admin_is_admin()` apenas diz se a própria conta é admin.
 - Decisões passam por `SECURITY DEFINER`, com contexto local de transação; proteções originais do anunciante permanecem ativas.
 - Animais de espécies sujeitas à revisão voltam para `pending` se o anunciante editar fotos, descrição, raça, nome científico ou informações de origem após aprovação. Alertas de outras espécies também voltam à análise após mudanças nas fotos ou características. Isso impede contornar a revisão com edições posteriores.
