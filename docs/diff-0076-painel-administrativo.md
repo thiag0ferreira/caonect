@@ -52,7 +52,7 @@ As tabelas `caonect_private.admins` e `caonect_private.moderation_audit` ficam e
 6. **Documentação:** para espécie de análise especial, tentar aprovar sem observações de origem legal. O backend deve **impedir** a aprovação. Registre informações e comprove documentalmente a origem antes de marcar a caixa e aprovar. A aprovação manual não substitui autorizações ambientais exigidas.
 7. **Aprovação com justificativa:** registrar motivo com mais de 10 caracteres e confirmar. Após reabrir, o status deve ser `approved`, o animal elegível passa a aparecer na vitrine (se disponível), e a Auditoria recebe evento.
 8. **Rejeitar/ocultar:** como administrador, rejeitar um pet de teste aprovado; deve deixar a vitrine pública, permanecendo no cadastro do responsável.
-9. **Denúncia:** conta B denunciar alerta da conta A. Conferir denúncia no painel e marcar analisada ou descartada, registrando o motivo. Concluir denúncia **não** remove automaticamente o alerta.
+9. **Denúncia:** conta B denunciar alerta da conta A. Conferir denúncia no painel e marcar analisada ou descartada, registrando o motivo. Concluir denúncia **não** remove automaticamente o alerta. A própria fila de denúncias oferece foto do anúncio e botão **Ocultar alerta denunciado**, que é uma ação separada com justificativa obrigatória.
 10. **Alerta:** pela aba Perdidos, rejeitar ou arquivar um alerta inadequado; verificar que sai do mural público. Arquivar é uma ação irreversível pelo anunciante.
 11. **Auditoria:** cada decisão deve trazer tipo de entidade, ação, motivo e mudança de status; não deve ficar acessível a contas comuns.
 12. **Regressão:** login, edição de perfil, cadastro normal de cães/gatos, adoções, chat, fotos, PWA, domínio www e links de anúncios continuam operando.
