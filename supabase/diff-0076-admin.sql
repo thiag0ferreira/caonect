@@ -158,6 +158,7 @@ begin
   if new.animal_category is distinct from old.animal_category or
      new.species is distinct from old.species then
    new.review_status=case when old.review_status='approved'
+       and old.animal_category in ('Cachorros','Gatos')
        and new.animal_category in ('Cachorros','Gatos') then 'approved'
      else 'pending' end;
   elsif new.animal_category not in ('Cachorros','Gatos')
@@ -206,6 +207,7 @@ begin
  elsif new.species is distinct from old.species or new.category is distinct from old.category then
   new.moderation_status=case
    when old.moderation_status='approved'
+    and old.category in ('Cachorros','Gatos')
     and ((new.category='Cachorros' and new.species='Cachorro')
       or (new.category='Gatos' and new.species='Gato')) then 'approved'
    else 'pending' end;
