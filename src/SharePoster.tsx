@@ -52,20 +52,25 @@ async function renderPoster(alert:LostFoundAlert,format:Format):Promise<Blob>{
  const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H
  const ctx=canvas.getContext('2d');if(!ctx)throw Error('Seu navegador não suporta a criação do cartaz.')
  const image=await photoElement(lostFoundPhoto(alert.photo_paths[0]))
+ const logo=await photoElement(import.meta.env.BASE_URL+'brand-logo.svg').catch(()=>null)
  const link=lostFoundLink(alert.id)
  ctx.fillStyle=palette.cream;ctx.fillRect(0,0,W,H)
  ctx.fillStyle=palette.green;ctx.fillRect(0,0,W,24)
  ctx.fillStyle=palette.mint;ctx.beginPath();ctx.arc(1000,110,105,0,2*Math.PI);ctx.fill()
  ctx.textAlign='left';ctx.fillStyle=palette.green
- ctx.font='bold 49px Arial, sans-serif';ctx.fillText('Cãonect',88,story?175:124)
- ctx.fillStyle=palette.brown;ctx.font='25px Arial, sans-serif';ctx.fillText('Encontros que viram família',90,story?215:160)
+ if(logo)ctx.drawImage(logo,79,story?113:65,110,73)
+ ctx.font='bold 49px Arial, sans-serif';ctx.fillText('Cãonect',204,story?165:112)
+ ctx.fillStyle=palette.brown;ctx.font='25px Arial, sans-serif';ctx.fillText('Encontros que viram família',204,story?206:154)
  const tag=alert.alert_type==='lost'?'PROCURA-SE • PET PERDIDO':'VOCÊ CONHECE ESTE PET?'
  rounded(ctx,85,story?270:196,story?490:590,67,24,alert.alert_type==='lost'?palette.terracotta:palette.green)
  ctx.fillStyle='#fff';ctx.font='bold 27px Arial, sans-serif';ctx.fillText(tag,110,story?312:239)
  const name=alert.pet_name?.trim()||(alert.alert_type==='found'?'Animal encontrado':'Pet desaparecido')
  ctx.fillStyle=palette.dark
  textFit(ctx,name,895,82,44)
- ctx.fillText(name,86,story?408:340)
+ let displayName=name
+ while(displayName.length>3&&ctx.measureText(displayName).width>905)displayName=displayName.slice(0,-2)
+ if(displayName!==name)displayName=displayName.trim()+'…'
+ ctx.fillText(displayName,86,story?408:340)
  const photoY=story?467:389,photoH=story?745:440
  cover(ctx,image,72,photoY,936,photoH,30)
  const bottom=photoY+photoH
@@ -86,6 +91,8 @@ async function renderPoster(alert:LostFoundAlert,format:Format):Promise<Blob>{
  drawLines(ctx,'ESCANEIE E AJUDE',story?446:348,qrY+(story?83:54),story?570:655,51,2)
  ctx.font='30px Arial, sans-serif';ctx.fillStyle=palette.brown
  drawLines(ctx,'Veja as fotos e compartilhe o anúncio.',story?446:348,qrY+(story?177:137),story?550:660,40,2)
+ ctx.fillStyle=palette.green;ctx.font='bold 26px Arial, sans-serif'
+ ctx.fillText(new URL(link).hostname,story?446:348,qrY+(story?255:209))
  ctx.fillStyle=palette.green;ctx.fillRect(0,H-94,W,94)
  ctx.fillStyle='#FFFFFF';ctx.font='bold 29px Arial, sans-serif'
  ctx.textAlign='center';ctx.fillText('Cãonect • Encontros que viram família',W/2,H-38)
