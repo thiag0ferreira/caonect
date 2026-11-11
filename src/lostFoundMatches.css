@@ -42,3 +42,11 @@
  .lf-match-candidate-body>strong{font-size:13px}
  .lf-match-pair-top span{width:100%;margin-left:25px}
 }
+
+.lf-match-teaser{display:flex;align-items:center;gap:14px;margin:8px 0 20px;padding:16px 18px;border:1px solid #dce9df;background:#f5fbf6;border-radius:15px}
+.lf-match-teaser>svg{color:#b27f5e;flex-shrink:0}
+.lf-match-teaser>div{flex:1;min-width:0}
+.lf-match-teaser strong{display:block;color:#285b4e;font-size:15px}
+.lf-match-teaser p{margin:4px 0 0;color:#567467;font-size:12px;line-height:1.55}
+.lf-match-teaser button{border:1px solid #285b4e;background:#285b4e;border-radius:9px;color:white;font-size:13px;padding:11px 15px;font-weight:700;cursor:pointer;flex-shrink:0}
+@media(max-width:640px){.lf-match-teaser{align-items:flex-start;flex-wrap:wrap}.lf-match-teaser button{width:100%}}
