@@ -167,7 +167,13 @@ export default function LostFound({user,onLogin}:Props){
    }
   }
  }
- const sendTip=async(e:FormEvent)=>{
+ const shareWhatsapp=(alert:LostFoundAlert)=>{
+   const lead=alert.alert_type==='lost'?'Ajude a encontrar':'Ajude a identificar a família de'
+   const title=alert.pet_name||'este animal'
+   const message=lead+' '+title+' • '+alert.district+', '+alert.city+'\n'+lostFoundLink(alert.id)
+   window.open('https://wa.me/?text='+encodeURIComponent(message),'_blank','noopener,noreferrer')
+  }
+  const sendTip=async(e:FormEvent)=>{
   e.preventDefault()
   if(!supabase||!detail||!user)return
   if(tipMessage.trim().length<10){setTipError('Escreva pelo menos 10 caracteres.');return}
@@ -230,6 +236,7 @@ export default function LostFound({user,onLogin}:Props){
     <div className="lf-safety"><ShieldCheck size={18}/> Informações pessoais, telefone e endereço exato não são exibidos. Verifique o vínculo com o animal antes de qualquer entrega.</div>
     <div className="lf-actions">
      <button type="button" className="secondary" onClick={()=>share(detail)}><Share2 size={17}/> Compartilhar link</button>
+      <button type="button" className="secondary" onClick={()=>shareWhatsapp(detail)}><MessageCircle size={17}/> WhatsApp</button>
       {detail.status==='active'&&detail.moderation_status==='approved'&&<button type="button" className="secondary" onClick={()=>setPoster(true)}><Camera size={17}/> Criar cartaz / Story</button>}
      {detail.status==='active'&&detail.moderation_status==='approved'&&detail.owner_id!==user?.id&&
       <button type="button" className="primary" onClick={()=>user?(setContact(true),setTipError('')):onLogin()}><MessageCircle size={17}/>{detail.alert_type==='lost'?'Tenho informações':'Pode ser meu pet'}</button>}
