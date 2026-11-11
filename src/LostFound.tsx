@@ -7,6 +7,7 @@ import {RAS} from './dfRegions'
 import {ANIMAL_CATEGORIES} from './animalCategories'
 import {lostFoundPhoto,lostFoundLink,statusLabel,custodyLabel,type AlertType,type LostFoundAlert,type LostFoundTip} from './lostFound'
 import LostFoundEditor from './LostFoundEditor'
+import SharePoster from './SharePoster'
 import './lostFound.css'
 
 type Props={user:User|null;onLogin:()=>void}
@@ -32,6 +33,7 @@ export default function LostFound({user,onLogin}:Props){
  const [notice,setNotice]=useState('')
  const [working,setWorking]=useState(false)
  const [contact,setContact]=useState(false)
+ const [poster,setPoster]=useState(false)
  const [tipMessage,setTipMessage]=useState('')
  const [tipArea,setTipArea]=useState('')
  const [tipDate,setTipDate]=useState('')
@@ -118,13 +120,13 @@ export default function LostFound({user,onLogin}:Props){
   const url=new URL(window.location.href)
   url.searchParams.set('alert',alert.id);url.searchParams.delete('pagina')
   window.history.pushState({},'',url.pathname+url.search)
-  setChosenId(alert.id);setEditor(null);setContact(false);setReportOpen(false);setNotice('');window.scrollTo({top:0,behavior:'smooth'})
+  setChosenId(alert.id);setEditor(null);setContact(false);setReportOpen(false);setPoster(false);setNotice('');window.scrollTo({top:0,behavior:'smooth'})
  }
  const closeDetail=()=>{
   const url=new URL(window.location.href)
   url.searchParams.delete('alert');url.searchParams.set('pagina','perdidos-encontrados')
   window.history.pushState({},'',url.pathname+url.search)
-  setChosenId(null);setDetail(null);setContact(false);setReportOpen(false);setNotice('')
+  setChosenId(null);setDetail(null);setContact(false);setReportOpen(false);setPoster(false);setNotice('')
  }
  const create=(type:AlertType)=>{
   if(!user){onLogin();return}
@@ -165,7 +167,13 @@ export default function LostFound({user,onLogin}:Props){
    }
   }
  }
- const sendTip=async(e:FormEvent)=>{
+ const shareWhatsapp=(alert:LostFoundAlert)=>{
+   const lead=alert.alert_type==='lost'?'Ajude a encontrar':'Ajude a identificar a família de'
+   const title=alert.pet_name||'este animal'
+   const message=lead+' '+title+' • '+alert.district+', '+alert.city+'\n'+lostFoundLink(alert.id)
+   window.open('https://wa.me/?text='+encodeURIComponent(message),'_blank','noopener,noreferrer')
+  }
+  const sendTip=async(e:FormEvent)=>{
   e.preventDefault()
   if(!supabase||!detail||!user)return
   if(tipMessage.trim().length<10){setTipError('Escreva pelo menos 10 caracteres.');return}
@@ -228,6 +236,8 @@ export default function LostFound({user,onLogin}:Props){
     <div className="lf-safety"><ShieldCheck size={18}/> Informações pessoais, telefone e endereço exato não são exibidos. Verifique o vínculo com o animal antes de qualquer entrega.</div>
     <div className="lf-actions">
      <button type="button" className="secondary" onClick={()=>share(detail)}><Share2 size={17}/> Compartilhar link</button>
+      <button type="button" className="secondary" onClick={()=>shareWhatsapp(detail)}><MessageCircle size={17}/> WhatsApp</button>
+      {detail.status==='active'&&detail.moderation_status==='approved'&&<button type="button" className="secondary" onClick={()=>setPoster(true)}><Camera size={17}/> Criar cartaz / Story</button>}
      {detail.status==='active'&&detail.moderation_status==='approved'&&detail.owner_id!==user?.id&&
       <button type="button" className="primary" onClick={()=>user?(setContact(true),setTipError('')):onLogin()}><MessageCircle size={17}/>{detail.alert_type==='lost'?'Tenho informações':'Pode ser meu pet'}</button>}
      {detail.owner_id!==user?.id&&detail.moderation_status==='approved'&&detail.status!=='archived'&&<button type="button" className="secondary lf-report-btn" disabled={reported} onClick={()=>user?(setReportOpen(true),setReportError('')):onLogin()}><Flag size={16}/>{reported?'Denúncia registrada':'Denunciar anúncio'}</button>}
@@ -236,7 +246,8 @@ export default function LostFound({user,onLogin}:Props){
     {detail.moderation_status==='pending'&&user?.id===detail.owner_id&&<p className="lf-note">Este alerta está aguardando revisão e ainda não é exibido ao público.</p>}
     {user&&tips.length>0&&<div className="lf-tips"><h3>{detail.owner_id===user.id?'Informações recebidas':'Informações que você enviou'} ({tips.length})</h3>{tips.map(t=><article key={t.id}><p>{t.message}</p><small>{t.approximate_area?('Região informada: '+t.approximate_area+' · '):''}{t.sighting_date?'Avistamento: '+displayDate(t.sighting_date)+' · ':''}Enviado em {new Date(t.created_at).toLocaleDateString('pt-BR')}</small></article>)}</div>}
     {notice&&<p role="status" className="lf-notice">{notice}</p>}
-    {contact&&<div className="lf-modal-backdrop" onClick={()=>setContact(false)}><div className="lf-modal" role="dialog" aria-modal="true" aria-label="Enviar informações" onClick={e=>e.stopPropagation()}><h2>{detail.alert_type==='lost'?'Tenho informações':'Pode ser meu pet'}</h2><p>Sua mensagem ficará disponível apenas para você e o responsável pelo anúncio. Não envie documentos ou endereço residencial.</p><form onSubmit={sendTip}><label>O que você sabe? *<textarea required minLength={10} maxLength={1500} rows={5} value={tipMessage} onChange={e=>setTipMessage(e.target.value)}/></label><label>Região aproximada (opcional)<input maxLength={160} value={tipArea} onChange={e=>setTipArea(e.target.value)}/></label><label>Data do avistamento (opcional)<input type="date" max={new Date().toISOString().slice(0,10)} value={tipDate} onChange={e=>setTipDate(e.target.value)}/></label>{tipError&&<p className="lf-error" role="alert">{tipError}</p>}<div className="lf-actions"><button type="button" className="secondary" onClick={()=>setContact(false)}>Cancelar</button><button disabled={tipBusy} type="submit" className="primary">{tipBusy?'Enviando...':'Enviar informação'}</button></div></form></div></div>}
+    {poster&&<SharePoster alert={detail} onClose={()=>setPoster(false)}/>}
+     {contact&&<div className="lf-modal-backdrop" onClick={()=>setContact(false)}><div className="lf-modal" role="dialog" aria-modal="true" aria-label="Enviar informações" onClick={e=>e.stopPropagation()}><h2>{detail.alert_type==='lost'?'Tenho informações':'Pode ser meu pet'}</h2><p>Sua mensagem ficará disponível apenas para você e o responsável pelo anúncio. Não envie documentos ou endereço residencial.</p><form onSubmit={sendTip}><label>O que você sabe? *<textarea required minLength={10} maxLength={1500} rows={5} value={tipMessage} onChange={e=>setTipMessage(e.target.value)}/></label><label>Região aproximada (opcional)<input maxLength={160} value={tipArea} onChange={e=>setTipArea(e.target.value)}/></label><label>Data do avistamento (opcional)<input type="date" max={new Date().toISOString().slice(0,10)} value={tipDate} onChange={e=>setTipDate(e.target.value)}/></label>{tipError&&<p className="lf-error" role="alert">{tipError}</p>}<div className="lf-actions"><button type="button" className="secondary" onClick={()=>setContact(false)}>Cancelar</button><button disabled={tipBusy} type="submit" className="primary">{tipBusy?'Enviando...':'Enviar informação'}</button></div></form></div></div>}
 
     {reportOpen&&<div className="lf-modal-backdrop" onClick={()=>setReportOpen(false)}>
       <div className="lf-modal" role="dialog" aria-modal="true" aria-label="Denunciar anúncio" onClick={e=>e.stopPropagation()}>

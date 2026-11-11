@@ -38,7 +38,10 @@ export const lostFoundPhoto=(path:string)=>{
  return supabase.storage.from('lost-found-photos').getPublicUrl(path).data.publicUrl
 }
 export const lostFoundLink=(id:string)=>{
- const url=new URL('/',window.location.origin)
+ // Links públicos e QR Codes devem continuar válidos mesmo quando a pessoa
+ // gera o cartaz numa prévia da Cloudflare ou abre o site sem www.
+ const origin=import.meta.env.VITE_PUBLIC_SITE_URL||'https://www.caonect.com.br/'
+ const url=new URL('/',origin)
  url.searchParams.set('alert',id)
  return url.toString()
 }
