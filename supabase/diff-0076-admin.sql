@@ -160,6 +160,17 @@ begin
    new.review_status=case when old.review_status='approved'
        and new.animal_category in ('Cachorros','Gatos') then 'approved'
      else 'pending' end;
+  elsif new.animal_category not in ('Cachorros','Gatos')
+    and (
+      new.description is distinct from old.description or
+      new.image_url is distinct from old.image_url or
+      new.photo_urls is distinct from old.photo_urls or
+      new.legal_origin_notes is distinct from old.legal_origin_notes or
+      new.scientific_name is distinct from old.scientific_name or
+      new.breed is distinct from old.breed
+    ) then
+    -- Conteúdo e comprovação alterados após avaliação EXIGEM nova revisão.
+    new.review_status='pending';
   end if;
  end if;
  return new;
@@ -198,6 +209,19 @@ begin
     and ((new.category='Cachorros' and new.species='Cachorro')
       or (new.category='Gatos' and new.species='Gato')) then 'approved'
    else 'pending' end;
+ elsif tg_op='UPDATE'
+    and new.category not in ('Cachorros','Gatos')
+    and (select auth.uid()) is not null
+    and not (current_user='postgres' and current_setting('caonect.admin_action',true)='on')
+    and (
+     new.description is distinct from old.description or
+     new.characteristics is distinct from old.characteristics or
+     new.behavior is distinct from old.behavior or
+     new.photo_paths is distinct from old.photo_paths or
+     new.color is distinct from old.color
+    ) then
+  -- Edição de anúncio especial previamente aprovado volta à fila de revisão.
+  new.moderation_status='pending';
  end if;
  if cardinality(new.photo_paths) not between 1 and 3 then
   raise exception 'Adicione de 1 a 3 fotos';
@@ -301,7 +325,7 @@ begin
  perform caonect_private.require_admin();
  return coalesce((
   select jsonb_agg(to_jsonb(x) order by x.created_at desc)
-  from (select id,entity_type,entity_id,action,note,previous_state,
+  from (select id,actor_id,entity_type,entity_id,action,note,previous_state,
           next_state,created_at
         from caonect_private.moderation_audit
         order by created_at desc limit greatest(1,least(coalesce(p_limit,40),100))) x
