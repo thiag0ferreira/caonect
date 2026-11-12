@@ -3,9 +3,10 @@ import type {User} from '@supabase/supabase-js'
 import {supabase} from './supabase'
 import {AlertTriangle,CheckCircle2,ClipboardCheck,Eye,Flag,LockKeyhole,PawPrint,RefreshCw,ShieldCheck,Users,X} from 'lucide-react'
 import {lostFoundPhoto} from './lostFound'
+import AdminAnalytics from './AdminAnalytics'
 import './admin.css'
 
-type Section='reports'|'pets'|'alerts'|'users'|'audit'
+type Section='analytics'|'reports'|'pets'|'alerts'|'users'|'audit'
 type Entity='report'|'pet'|'alert'
 type Action='approve'|'reject'|'hide'|'archive'|'reviewed'|'dismissed'
 type Counts={users:number;pets:number;pending_pets:number;pending_alerts:number;pending_reports:number;active_alerts:number}
@@ -36,6 +37,7 @@ const statuses:Record<string,string>={
  reviewed:'Analisada',dismissed:'Descartada'
 }
 const sections:{key:Section;label:string}[]=[
+ {key:'analytics',label:'Indicadores'},
  {key:'reports',label:'Denúncias'},
  {key:'pets',label:'Aprovação de animais'},
  {key:'alerts',label:'Perdidos e encontrados'},
@@ -48,7 +50,7 @@ const isExotic=(c:string)=>!['Cachorros','Gatos'].includes(c)
 
 export default function AdminPanel({user,onLogin}:{user:User|null;onLogin:()=>void}){
  const [access,setAccess]=useState<'checking'|'granted'|'denied'>('checking')
- const [section,setSection]=useState<Section>('reports')
+ const [section,setSection]=useState<Section>('analytics')
  const [page,setPage]=useState(0)
  const [refresh,setRefresh]=useState(0)
  const [loading,setLoading]=useState(false)
@@ -79,9 +81,11 @@ export default function AdminPanel({user,onLogin}:{user:User|null;onLogin:()=>vo
   setLoading(true);setError('')
   const client=supabase
   const dashboard=client.rpc('caonect_admin_dashboard')
-  const list=section==='audit'
-   ?client.rpc('caonect_admin_audit',{p_limit:60})
-   :client.rpc('caonect_admin_list',{p_section:section,p_limit:30,p_offset:page*30})
+  const list=section==='analytics'
+   ?Promise.resolve({data:[],error:null})
+   :section==='audit'
+    ?client.rpc('caonect_admin_audit',{p_limit:60})
+    :client.rpc('caonect_admin_list',{p_section:section,p_limit:30,p_offset:page*30})
   Promise.all([dashboard,list]).then(([d,l])=>{
    if(!active)return
    if(d.error||l.error){setError(d.error?.message||l.error?.message||'Falha ao consultar painel.');setRows([])}
@@ -137,7 +141,8 @@ export default function AdminPanel({user,onLogin}:{user:User|null;onLogin:()=>vo
     {['pets','alerts','reports'].includes(section)&&<label className="ca-admin-filter"><input type="checkbox" checked={onlyPending} onChange={e=>setOnlyPending(e.target.checked)}/> Mostrar somente pendentes desta página</label>}
     {error&&<p className="ca-admin-error" role="alert">{error}</p>}
     {notice&&<p className="ca-admin-notice" role="status"><CheckCircle2 size={17}/>{notice}</p>}
-    {loading?<div className="ca-admin-state" role="status">Carregando registros…</div>:
+    {section==='analytics'?<AdminAnalytics refreshSignal={refresh}/>:
+    loading?<div className="ca-admin-state" role="status">Carregando registros…</div>:
      <div className="ca-admin-list">
       {filtered.length===0?<div className="ca-admin-state"><ClipboardCheck size={26}/><h3>Nenhum registro para exibir</h3><p>Altere o filtro ou consulte outra página de resultados.</p></div>:null}
       {section==='pets'&&(filtered as PetRow[]).map(p=><article className="ca-admin-item" key={p.id}>
@@ -198,7 +203,7 @@ export default function AdminPanel({user,onLogin}:{user:User|null;onLogin:()=>vo
        </div>
       </article>)}
      </div>}
-    {section!=='audit'&&<div className="ca-admin-pagination"><button type="button" className="secondary" disabled={page===0||loading} onClick={()=>setPage(v=>v-1)}>Anterior</button><span>Página {page+1}</span><button type="button" className="secondary" disabled={loading||rows.length<30} onClick={()=>setPage(v=>v+1)}>Próxima</button></div>}
+    {section!=='audit'&&section!=='analytics'&&<div className="ca-admin-pagination"><button type="button" className="secondary" disabled={page===0||loading} onClick={()=>setPage(v=>v-1)}>Anterior</button><span>Página {page+1}</span><button type="button" className="secondary" disabled={loading||rows.length<30} onClick={()=>setPage(v=>v+1)}>Próxima</button></div>}
     <div className="ca-admin-disclaimer"><LockKeyhole size={18}/><span>Somente dados necessários à moderação. O painel não fornece acesso a senhas, telefones, mensagens privadas ou coordenadas. Todas as decisões precisam de justificativa e ficam registradas no Supabase.</span></div>
    </>}
   {pending&&<div className="ca-admin-overlay" onClick={()=>!saving&&setPending(null)}><div className="ca-admin-dialog" role="dialog" aria-modal="true" aria-label="Confirmar decisão administrativa" onClick={e=>e.stopPropagation()}>
