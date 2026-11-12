@@ -1,75 +1,58 @@
-# Cãonect 🐾 — DIFF 002
+# Cãonect 🐾 — Encontros que viram família
 
-Plataforma responsiva de adoção de pets com React, Vite, TypeScript e GitHub Pages.
+Aplicativo de adoção responsável e reencontro de pets. Frontend **React + TypeScript + Vite**, Supabase para autenticação e dados, hospedagem de produção em **Cloudflare Pages** e PWA.
 
-## Funcionalidades
+> **Infraestrutura vigente (DIFF 007.6.1):** o GitHub é o repositório de código; a Cloudflare Pages faz builds e deploys automáticos. O workflow antigo de publicação no GitHub Pages foi removido. Não use mais **Actions → Publicar Caonect no GitHub Pages**.
 
-- Catálogo demonstrativo e catálogo público real (quando conectado ao Supabase)
-- Perfil de adotante, protetor independente ou ONG
-- Cadastro e login via Supabase Auth, com confirmação de e-mail
-- Painel de protetor: cadastrar pets, subir foto, editar status da adoção
-- Filtros, favoritos e experiência responsiva
-- Permissões por dono com Row Level Security (RLS)
+## Produção e deploy
 
-**Importante:** sem Supabase conectado, o portal exibe somente uma demonstração e desativa cadastros. Favoritos e solicitações do catálogo de exemplo são locais/temporários e não representam pedidos reais.
+- **Endereço oficial:** https://www.caonect.com.br/
+- **Domínio sem www:** https://caonect.com.br/ redireciona 301 para o endereço oficial, preservando path e query string (regra na zona DNS/Redirect Rules da Cloudflare).
+- **Cloudflare:** projeto Pages `caonect`, repositório GitHub `thiag0ferreira/caonect`, branch de produção `main`.
+- **Build:** preset **React (Vite)**, comando `npm run build`, diretório de saída `dist`; diretório raiz padrão.
+- **Deploy de produção:** commit/pull request integrado em `main` inicia o build pela **Cloudflare Pages**. Veja o resultado em **Cloudflare → Workers & Pages → caonect → Deployments**, não em GitHub Actions.
+- **Testes de PR:** utilize a URL de Preview publicada nos checks `Cloudflare Pages` do GitHub; não integre recursos não homologados à `main`.
 
-## 1. Criar Supabase
+### Variáveis e proteção de credenciais
 
-1. Acesse https://supabase.com/dashboard e crie um projeto exclusivo para Cãonect.
-2. Em **SQL Editor**, execute o arquivo [supabase/schema.sql](supabase/schema.sql) na íntegra (apenas neste novo projeto).
-3. Em **Authentication > URL Configuration**, configure:
-   - Site URL: `https://thiag0ferreira.github.io/caonect/`
-   - Redirect URLs: `https://thiag0ferreira.github.io/caonect/**`
-4. Ative **Confirm email** em Authentication. Use um serviço SMTP apropriado antes de abrir inscrições ao público.
-5. Em **Project Settings / Connect**, copie a **Project URL** e a **Publishable key**.
+No projeto Cloudflare Pages, configure as variáveis de **Build** e, quando utilizadas por funções Pages, também de **Runtime**:
 
-## 2. Variáveis no GitHub
+```env
+VITE_SUPABASE_URL=https://SEU_PROJETO.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_EXEMPLO
+```
 
-Em https://github.com/thiag0ferreira/caonect/settings/variables/actions crie **Repository variables**:
+Use apenas a chave **publishable** com regras RLS no Supabase. **Nunca** exponha `service_role`, `sb_secret_...`, tokens privados ou senhas em variáveis `VITE_*`, frontend ou repositório. A prévia Open Graph de alertas funciona via `functions/index.js` no Pages, lendo apenas dados públicos dos alertas aprovados.
 
-- `VITE_SUPABASE_URL` = URL pública do projeto
-- `VITE_SUPABASE_PUBLISHABLE_KEY` = chave pública `sb_publishable_...` (ou equivalente)
+No Supabase → Authentication → URL Configuration, a **Site URL** deve apontar para `https://www.caonect.com.br/`. Mantenha Redirect URLs autorizados para a URL oficial e os endereços de Preview realmente usados. Não altere as credenciais existentes por causa de uma atualização de frontend.
 
-A seguir vá para **Actions > Publicar Caonect no GitHub Pages > Run workflow**. O workflow lê automaticamente essas variáveis no build.
-
-**NUNCA** publique `service_role`, `sb_secret_...`, senha de banco, tokens ou segredos em variáveis `VITE_*`, repositório público, mensagens ou frontend. A publishable key é pública por design, e a segurança depende da RLS.
-
-## 3. Rodar local
+### Desenvolvimento local
 
 Node.js 22+:
 
 ```bash
 npm install
 npm run dev
-```
-
-Para conectar localmente, crie um arquivo não versionado `.env.local`:
-
-```env
-VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_EXEMPLO
-```
-
-```bash
 npm run build
 ```
 
-## 4. Limitações e segurança antes de abrir ao público
+Crie `.env.local` local (não versionar) com as duas variáveis `VITE_` acima. O `prebuild` gera os assets de marca e o build de Vite produz `dist` e os ícones do PWA.
 
-- O status de ONG/protetor ainda é **autodeclarado** e não constitui verificação; precisa de moderação e validação de organizações.
-- Solicitações reais e o acompanhamento de adoções não foram implementados; haverá uma etapa própria para consentimento e controle de acesso.
-- Não coletamos documentos ou dados sensíveis neste protótipo.
-- Fotos de animais são públicas; não envie imagens contendo documentos, endereço ou pessoas sem autorização.
-- Falta uma política de privacidade e um fluxo de denúncia, exclusão de conta e moderação para produção.
-- PWA inicial instalado pelo navegador. Empacotamento Capacitor para as lojas será uma etapa futura.
-- Logo: o arquivo `public/favicon.svg` é temporário. A logo original PNG precisa ser publicada como `public/logo.png` e referenciada no cabeçalho.
+### Publicação e conferência após merge
 
-## Deploy
+1. Confirme o check **Cloudflare Pages: Deploy successful** no commit em `main`.
+2. Abra `https://www.caonect.com.br/` e confira login, pets, perdidos, cartazes e PWA.
+3. Verifique o menu Admin com conta autorizada e a negação para conta comum.
+4. Se o PWA mostrar conteúdo antigo, feche e reabra e atualize o cache; evite apagar dados do usuário desnecessariamente.
+5. O projeto GitHub Pages legado pode continuar exibindo sua última versão estática mesmo sem workflow. **Despublicar** pelo painel de Settings → Pages é uma etapa opcional e separada, depois de confirmar que nenhum link ainda depende do endereço antigo.
 
-A branch `main` publica automaticamente via GitHub Actions em:
+Veja também [DIFF 007.6.1 — Infraestrutura Cloudflare](docs/diff-00761-cloudflare-only.md) e [DIFF 007.6 — Painel administrativo](docs/diff-0076-painel-administrativo.md).
 
-https://thiag0ferreira.github.io/caonect/
+---
 
+## Histórico de desenvolvimento
+
+As seções abaixo registram os DIFFs anteriores. Instruções antigas que mencionam **GitHub Pages**, `github.io` ou **GitHub Actions** refletem a arquitetura de então e **não devem ser usadas para a hospedagem atual**. Use as orientações de produção no início deste arquivo.
 
 ## DIFF 002.1 — Catálogo real, favoritos e conversas
 
