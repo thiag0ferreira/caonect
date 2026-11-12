@@ -1,0 +1,52 @@
+/* DIFF 007.4 — sugestões determinísticas de reencontro */
+.lf-match-section{margin:26px 0 28px;padding:23px;border-radius:20px;border:1px solid #d9e9df;background:linear-gradient(140deg,#f4faf5,#fffaf4)}
+.lf-match-heading{max-width:760px}
+.lf-match-heading .kicker{display:inline-flex;align-items:center;gap:6px}
+.lf-match-heading h2{font-size:clamp(21px,2.8vw,29px);line-height:1.2;margin:9px 0;color:#285b4e}
+.lf-match-heading p{font-size:13px;line-height:1.65;margin:0 0 18px;color:#577266}
+.lf-match-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:15px}
+.lf-match-pair{min-width:0;background:#fff;border:1px solid #dce9df;border-radius:16px;padding:15px;box-shadow:0 7px 24px #2446370b}
+.lf-match-pair-top{display:flex;gap:8px;align-items:center;color:#285b4e;margin-bottom:13px;flex-wrap:wrap}
+.lf-match-pair-top strong{font-size:14px}
+.lf-match-pair-top span{font-size:11px;color:#827461;margin-left:auto}
+.lf-match-pair-animals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.lf-match-candidate{overflow:hidden;background:#fafcf9;border:1px solid #e6eee7;border-radius:12px;min-width:0}
+.lf-match-candidate>img{display:block;width:100%;height:136px;object-fit:cover;background:#e8f0eb}
+.lf-match-candidate-body{padding:11px;display:grid;align-content:start;gap:7px;min-width:0}
+.lf-match-candidate-body>.lf-tag{justify-self:start;font-size:10px}
+.lf-match-candidate-body>strong{font-size:15px;color:#295746;overflow-wrap:anywhere}
+.lf-match-candidate-body small{font-size:11px;color:#667e71;display:flex;align-items:flex-start;gap:4px;overflow-wrap:anywhere;line-height:1.45}
+.lf-match-candidate-body small svg{flex-shrink:0}
+.lf-match-candidate-body button{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:750;color:#285b4e;justify-self:start;text-align:left;padding:3px 0;cursor:pointer}
+.lf-match-candidate-body button:hover{text-decoration:underline}
+.lf-match-reasons{margin-top:13px;padding-top:12px;border-top:1px solid #e6eee7}
+.lf-match-reasons>strong,.lf-match-cautions>strong{font-size:12px;color:#285b4e}
+.lf-match-reasons ul{display:flex;gap:6px;flex-wrap:wrap;list-style:none;padding:0;margin:8px 0}
+.lf-match-reasons li{font-size:11px;color:#2d6551;background:#e7f2e8;border-radius:20px;padding:5px 9px}
+.lf-match-cautions{margin-top:12px}
+.lf-match-cautions strong{color:#94653f}
+.lf-match-cautions li{color:#7a552e;background:#fff2e4}
+.lf-match-disclaimer{display:flex;gap:9px;align-items:flex-start;margin:16px 0 3px!important;padding:11px 12px;border-radius:12px;background:#e9f4e9;color:#4e6c59;font-size:12px!important;line-height:1.55}
+.lf-match-disclaimer svg{flex-shrink:0}
+.lf-match-scope{margin:5px 0 0!important;color:#728578;font-size:11px!important;line-height:1.5}
+.lf-match-empty{padding:26px 16px;border:1px dashed #bfd9c7;border-radius:14px;text-align:center;color:#60796c;background:#fff}
+.lf-match-empty svg{color:#bb825f}
+.lf-match-empty h3{color:#285b4e;font-size:17px;margin:10px 0}
+.lf-match-empty p{margin:0;font-size:12px;line-height:1.55}
+@media(max-width:640px){
+ .lf-match-section{padding:14px;margin:17px 0}
+ .lf-match-list{grid-template-columns:1fr}
+ .lf-match-candidate>img{height:116px}
+ .lf-match-pair{padding:11px}
+ .lf-match-candidate-body{padding:9px}
+ .lf-match-candidate-body>strong{font-size:13px}
+ .lf-match-pair-top span{width:100%;margin-left:25px}
+}
+
+.lf-match-teaser{display:flex;align-items:center;gap:14px;margin:8px 0 20px;padding:16px 18px;border:1px solid #dce9df;background:#f5fbf6;border-radius:15px}
+.lf-match-teaser>svg{color:#b27f5e;flex-shrink:0}
+.lf-match-teaser>div{flex:1;min-width:0}
+.lf-match-teaser strong{display:block;color:#285b4e;font-size:15px}
+.lf-match-teaser p{margin:4px 0 0;color:#567467;font-size:12px;line-height:1.55}
+.lf-match-teaser button{border:1px solid #285b4e;background:#285b4e;border-radius:9px;color:white;font-size:13px;padding:11px 15px;font-weight:700;cursor:pointer;flex-shrink:0}
+@media(max-width:640px){.lf-match-teaser{align-items:flex-start;flex-wrap:wrap}.lf-match-teaser button{width:100%}}

@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useState,type FormEvent} from 'react'
 import type {User} from '@supabase/supabase-js'
-import {ArrowLeft,CalendarDays,Camera,CheckCircle2,HeartHandshake,Info,MapPin,MessageCircle,Plus,Search,Share2,ShieldCheck,Trash2,Flag} from 'lucide-react'
+import {ArrowLeft,CalendarDays,Camera,CheckCircle2,HeartHandshake,Info,MapPin,MessageCircle,Plus,Search,Share2,ShieldCheck,Trash2,Flag,Sparkles} from 'lucide-react'
 import {supabase,isBackendReady} from './supabase'
 import {SUPPORTED_CITIES,FERNANDOPOLIS_AREAS,stateForCity} from './supportedLocations'
 import {RAS} from './dfRegions'
@@ -8,10 +8,12 @@ import {ANIMAL_CATEGORIES} from './animalCategories'
 import {lostFoundPhoto,lostFoundLink,statusLabel,custodyLabel,type AlertType,type LostFoundAlert,type LostFoundTip} from './lostFound'
 import LostFoundEditor from './LostFoundEditor'
 import SharePoster from './SharePoster'
+import LostFoundMatches from './LostFoundMatches'
+import {findMatches} from './lostFoundMatching'
 import './lostFound.css'
 
 type Props={user:User|null;onLogin:()=>void}
-type Filter='all'|'lost'|'found'|'resolved'|'mine'
+type Filter='all'|'lost'|'found'|'resolved'|'mine'|'matches'
 const displayDate=(value:string)=>new Date(value.slice(0,10)+'T12:00:00').toLocaleDateString('pt-BR')
 const isGuid=(x:string|null)=>!!x&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x)
 export default function LostFound({user,onLogin}:Props){
@@ -101,7 +103,18 @@ export default function LostFound({user,onLogin}:Props){
   return()=>{active=false}
  },[detail?.id,user?.id,refresh])
 
+ const publicMatches=useMemo(()=>findMatches(alerts,undefined,30),[alerts])
+ const orderedMatches=useMemo(()=>{
+  if(!user)return publicMatches
+  return [...publicMatches].sort((a,b)=>{
+   const mineA=Number(a.lost.owner_id===user.id||a.found.owner_id===user.id)
+   const mineB=Number(b.lost.owner_id===user.id||b.found.owner_id===user.id)
+   return mineB-mineA||b.score-a.score
+  })
+ },[publicMatches,user?.id])
+ const detailMatches=useMemo(()=>detail?findMatches([...alerts.filter(a=>a.id!==detail.id),detail],detail.id,4):[],[alerts,detail])
  const visible=useMemo(()=>alerts.filter(a=>{
+   if(filter==='matches')return false
   const own=!!user&&a.owner_id===user.id
   if(filter==='mine')return own
   if(a.status==='archived'||a.moderation_status!=='approved')return false
@@ -244,6 +257,7 @@ export default function LostFound({user,onLogin}:Props){
      {user?.id===detail.owner_id&&<><button className="secondary" onClick={()=>{const url=new URL(window.location.href);url.searchParams.delete('alert');url.searchParams.set('pagina','perdidos-encontrados');window.history.replaceState({},'',url.pathname+url.search);setEditor({type:detail.alert_type,editing:detail});setChosenId(null)}}>Editar anúncio</button>{detail.status==='active'&&<button disabled={working} className="primary" onClick={()=>updateStatus('resolved')}><CheckCircle2 size={17}/> Marcar reencontrado</button>}{detail.status!=='archived'&&<button disabled={working} className="secondary" onClick={()=>updateStatus('archived')}><Trash2 size={17}/> Arquivar</button>}</>}
     </div>
     {detail.moderation_status==='pending'&&user?.id===detail.owner_id&&<p className="lf-note">Este alerta está aguardando revisão e ainda não é exibido ao público.</p>}
+    {detailMatches.length>0&&<LostFoundMatches suggestions={detailMatches} onOpen={showDetail} context="detail"/>}
     {user&&tips.length>0&&<div className="lf-tips"><h3>{detail.owner_id===user.id?'Informações recebidas':'Informações que você enviou'} ({tips.length})</h3>{tips.map(t=><article key={t.id}><p>{t.message}</p><small>{t.approximate_area?('Região informada: '+t.approximate_area+' · '):''}{t.sighting_date?'Avistamento: '+displayDate(t.sighting_date)+' · ':''}Enviado em {new Date(t.created_at).toLocaleDateString('pt-BR')}</small></article>)}</div>}
     {notice&&<p role="status" className="lf-notice">{notice}</p>}
     {poster&&<SharePoster alert={detail} onClose={()=>setPoster(false)}/>}
@@ -281,8 +295,9 @@ export default function LostFound({user,onLogin}:Props){
     <button className="lf-choice found" type="button" onClick={()=>create('found')}><HeartHandshake size={27}/><strong>Encontrei um pet</strong><span>Ajude o animal encontrado a voltar para sua família.</span><b><Plus size={16}/> Divulgar</b></button>
    </div>
    {notice&&<p role="status" className="lf-notice">{notice}</p>}
-   <div className="lf-filter-tabs">{([['all','Todos'],['lost','Perdidos'],['found','Encontrados'],['resolved','Reencontrados'],['mine','Meus alertas']] as const).map(([key,label])=><button key={key} type="button" className={filter===key?'active':''} onClick={()=>setFilter(key)}>{label}</button>)}</div>
-   {filter!=='mine'&&<div className="lf-filters">
+   <div className="lf-match-teaser"><Sparkles size={19}/><div><strong>Novidade: possíveis reencontros</strong><p>Comparamos anúncios de perdidos e encontrados por características, datas e região. Sem custo e sem identificação automática por foto.</p></div><button type="button" onClick={()=>setFilter('matches')}>Ver sugestões</button></div>
+   <div className="lf-filter-tabs">{([['all','Todos'],['lost','Perdidos'],['found','Encontrados'],['resolved','Reencontrados'],['matches','Possíveis reencontros'],['mine','Meus alertas']] as const).map(([key,label])=><button key={key} type="button" className={filter===key?'active':''} onClick={()=>setFilter(key)}>{label}</button>)}</div>
+   {filter!=='mine'&&filter!=='matches'&&<div className="lf-filters">
     <label><Search size={15}/> <input aria-label="Buscar por característica" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Nome, cor, característica..."/></label>
     <select aria-label="Cidade" value={city} onChange={e=>{setCity(e.target.value);setDistrict('')}}><option value="Todas">Todas as cidades</option>{SUPPORTED_CITIES.map(c=><option key={c.city} value={c.city}>{c.label}</option>)}</select>
     {city==='Brasília'?<select aria-label="Região Administrativa" value={district} onChange={e=>setDistrict(e.target.value)}><option value="">Todas as RAs</option>{RAS.map(x=><option key={x} value={x}>{x}</option>)}</select>:city==='Fernandópolis'?<><input aria-label="Bairro" list="lf-search-areas" value={district} onChange={e=>setDistrict(e.target.value)} placeholder="Todos os bairros"/><datalist id="lf-search-areas">{FERNANDOPOLIS_AREAS.map(x=><option key={x} value={x}/>)}</datalist></>:null}
@@ -291,7 +306,8 @@ export default function LostFound({user,onLogin}:Props){
    {!user&&filter==='mine'&&<div className="lf-panel lf-empty"><p>Entre para acompanhar seus anúncios.</p><button className="primary" onClick={onLogin}>Entrar na minha conta</button></div>}
    {loading&&<div className="lf-panel lf-empty"><p>Carregando alertas...</p></div>}
    {error&&<div className="lf-panel lf-empty"><p role="alert">{error}</p><button onClick={()=>setRefresh(x=>x+1)} className="secondary">Tentar novamente</button></div>}
-   {!loading&&!error&&(!((filter==='mine')&&!user))&&(
+   {!loading&&!error&&filter==='matches'&&<LostFoundMatches suggestions={orderedMatches} onOpen={showDetail} context="central"/>}
+   {!loading&&!error&&filter!=='matches'&&(!((filter==='mine')&&!user))&&(
     visible.length===0?<div className="lf-panel lf-empty"><Camera size={32}/><h2>Nenhum alerta por aqui</h2><p>Os novos anúncios aparecerão nesta central. Você pode ajudar compartilhando o Cãonect.</p></div>:
     <div className="lf-grid">{visible.map(a=><article key={a.id} className="lf-card">
      <button className="lf-card-image" onClick={()=>showDetail(a)} aria-label={'Ver anúncio de '+(a.pet_name||'animal encontrado')}><img loading="lazy" src={lostFoundPhoto(a.photo_paths[0])} alt={a.pet_name||'Animal encontrado'}/><span className={'lf-tag '+(a.alert_type==='lost'?'lost':'found')}>{a.alert_type==='lost'?'PERDIDO':'ENCONTRADO'}</span></button>
