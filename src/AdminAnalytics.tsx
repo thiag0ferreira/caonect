@@ -56,7 +56,8 @@ export default function AdminAnalytics({refreshSignal}:{refreshSignal:number}){
   if(!supabase)return
   let mounted=true
   setLoading(true);setError('')
-  supabase.rpc('caonect_admin_analytics',{p_months:months})
+  // Supabase RPC implementa PromiseLike; Promise.resolve habilita catch/finally nativos.
+  Promise.resolve(supabase.rpc('caonect_admin_analytics',{p_months:months}))
    .then(({data:result,error:rpcError})=>{
     if(!mounted)return
     if(rpcError){setError(rpcError.message);setData(null);return}
@@ -106,7 +107,7 @@ export default function AdminAnalytics({refreshSignal}:{refreshSignal:number}){
       {metrics.map(m=><button type="button" key={m.key} aria-pressed={metric===m.key} className={metric===m.key?'selected':''} onClick={()=>setMetric(m.key)}>{m.label}</button>)}
      </div>
      <div className="ca-growth-bars" role="img" aria-label={metrics.find(m=>m.key===metric)?.label+': '+data.monthly.map(m=>monthLabel(m.month)+' '+format(m[metric])).join(', ')}>
-      {data.monthly.map((m,i)=><div className="ca-growth-month" key={m.month}>
+      {data.monthly.map(m=><div className="ca-growth-month" key={m.month}>
        <span className="ca-growth-value">{format(m[metric])}</span>
        <div className="ca-growth-track"><div className="ca-growth-bar" style={{height:(asNumber(m[metric])/max*100)+'%'}}/></div>
        <span className="ca-growth-month-label">{monthLabel(m.month)}</span>
