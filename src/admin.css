@@ -1,0 +1,75 @@
+.ca-admin{max-width:1250px;margin:auto;padding-bottom:60px}
+.ca-admin-head{margin-bottom:23px}.ca-admin-head .kicker{display:flex;align-items:center;gap:7px}
+.ca-admin-head h1{color:#285b4e;margin:11px 0 8px;font-size:clamp(28px,3vw,43px)}
+.ca-admin-head>p{color:#61766c;line-height:1.6;font-size:14px}
+.ca-admin-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:0 0 25px}
+.ca-admin-stats article{border:1px solid #dce8df;border-radius:15px;background:#fff;padding:17px;display:grid;gap:5px;min-width:0}
+.ca-admin-stats svg{color:#ba8868}.ca-admin-stats strong{font-size:28px;color:#285b4e;line-height:1.2}
+.ca-admin-stats span{font-size:12px;color:#65796d}
+.ca-admin-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:15px 0}
+.ca-admin-toolbar nav{display:flex;flex-wrap:wrap;gap:8px}
+.ca-admin-toolbar nav button{border:1px solid #d6e4db;padding:10px 14px;color:#285b4e;background:#fff;border-radius:30px;font-size:12px;font-weight:800;cursor:pointer}
+.ca-admin-toolbar nav button.active{background:#285b4e;color:#fff;border-color:#285b4e}
+.ca-admin-toolbar>.secondary{display:inline-flex;align-items:center;gap:8px}
+.ca-admin-filter{display:flex;align-items:center;gap:9px;font-size:13px;color:#446a58;padding:8px 0 14px}
+.ca-admin-filter input{width:17px;height:17px;accent-color:#285b4e}
+.ca-admin-list{display:grid;gap:12px}
+.ca-admin-item{display:flex;gap:18px;padding:19px;border:1px solid #dfebe1;border-radius:18px;background:#fff;min-width:0;box-shadow:0 7px 18px #2446360a}
+.ca-admin-media{height:115px;width:135px;flex-shrink:0;border-radius:12px;background:#eff6f0;display:flex;align-items:center;justify-content:center;overflow:hidden;color:#285b4e}
+.ca-admin-media img{width:100%;height:100%;object-fit:cover}
+.ca-admin-info{flex:1;min-width:0;display:grid;gap:8px;align-content:start}
+.ca-admin-title{display:flex;flex-wrap:wrap;align-items:center;gap:8px;overflow-wrap:anywhere}
+.ca-admin-title strong{color:#285b4e;font-size:19px}
+.ca-admin-info p{color:#597164;font-size:13px;line-height:1.6;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.ca-admin-info small{font-size:11px;line-height:1.5;color:#7c8b81;overflow-wrap:anywhere}
+.ca-admin-badge{background:#f1f5f1;color:#446a57;border-radius:40px;padding:6px 10px;font-size:10px;font-weight:800;white-space:nowrap}
+.ca-admin-badge.pending{background:#fff3df;color:#a86629}
+.ca-admin-badge.rejected,.ca-admin-badge.dismissed{background:#fff0ee;color:#9a4839}
+.ca-admin-badge.approved,.ca-admin-badge.reviewed{background:#e5f5e7;color:#307048}
+.ca-admin-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:7px}
+.ca-admin-actions button{padding:9px 14px;border:1px solid #285b4e;background:#285b4e;color:#fff;border-radius:9px;font-weight:800;font-size:12px;cursor:pointer}
+.ca-admin-actions button.danger{border-color:#ddc5ba;color:#92513c;background:#fffaf7}
+.ca-admin-actions button:hover{filter:brightness(.94)}
+.ca-admin-legal{display:flex;gap:8px;align-items:flex-start;padding:12px;border:1px solid #efdbc5;border-radius:9px;color:#835b39;background:#fff8ed;font-size:12px;line-height:1.5}
+.ca-admin-legal svg{flex-shrink:0}
+.ca-admin-help{font-size:11px!important;color:#8c6a4b!important}
+.ca-admin-report .ca-admin-media{background:#fff3ec;color:#ba7a5b}
+.ca-admin-user .ca-admin-media,.ca-admin-audit .ca-admin-media{height:76px;width:76px}
+.ca-admin-state{padding:45px 25px;text-align:center;background:#fff;border:1px solid #dce8df;border-radius:17px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#6b8174}
+.ca-admin-state h2,.ca-admin-state h3{margin:0;color:#285b4e}
+.ca-admin-state p{margin:0 0 10px;font-size:13px;max-width:580px;line-height:1.6}
+.ca-admin-error{border:1px solid #eac7bc;background:#fff0eb;color:#a04732;padding:12px 14px;border-radius:11px;font-size:13px;overflow-wrap:anywhere}
+.ca-admin-notice{display:flex;gap:9px;align-items:center;border:1px solid #cce1cf;background:#eff7ef;color:#236443;padding:12px 14px;border-radius:11px;font-size:13px}
+.ca-admin-pagination{margin:22px 0;display:flex;justify-content:center;align-items:center;gap:17px}
+.ca-admin-pagination span{color:#65786c;font-size:13px}
+.ca-admin-pagination button:disabled{opacity:.45;cursor:not-allowed}
+.ca-admin-disclaimer{display:flex;gap:9px;align-items:flex-start;margin-top:20px;padding:14px;background:#edf6ee;color:#567462;font-size:12px;line-height:1.6;border-radius:12px}
+.ca-admin-disclaimer svg{flex-shrink:0}
+.ca-admin-overlay{position:fixed;inset:0;z-index:90;background:#0e261ac2;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+.ca-admin-dialog{position:relative;width:min(530px,100%);background:white;padding:27px;border-radius:18px;max-height:93vh;overflow-y:auto}
+.ca-admin-dialog h2{color:#285b4e;margin:0 0 11px;font-size:24px}
+.ca-admin-dialog p{color:#5a7565;font-size:13px;line-height:1.5}
+.ca-admin-close{position:absolute;top:15px;right:15px;border:1px solid #dce8df;border-radius:50%;background:#fff;width:35px;height:35px;display:grid;place-items:center;cursor:pointer}
+.ca-admin-dialog form{display:grid;gap:14px}
+.ca-admin-dialog label{display:grid;gap:7px;color:#285b4e;font-size:13px;font-weight:750}
+.ca-admin-dialog textarea{border:1px solid #d6e4da;background:#fafcf9;border-radius:11px;padding:12px;font:inherit;min-height:90px;resize:vertical;width:100%;box-sizing:border-box}
+.ca-admin-dialog .ca-admin-confirm{display:flex;align-items:flex-start;gap:10px;background:#fff6e7;padding:12px;border-radius:9px;color:#815c34;line-height:1.55;font-weight:600}
+.ca-admin-confirm input{accent-color:#285b4e;width:17px;height:17px;flex-shrink:0;margin-top:2px}
+.ca-admin-dialog-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.ca-admin-dialog-actions button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:960px){.ca-admin-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){
+ .ca-admin{padding-left:14px;padding-right:14px}
+ .ca-admin-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ca-admin-stats article{padding:12px}
+ .ca-admin-toolbar{flex-direction:column;align-items:stretch}
+ .ca-admin-toolbar nav{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
+ .ca-admin-toolbar nav button{white-space:nowrap}
+ .ca-admin-toolbar>.secondary{justify-content:center}
+ .ca-admin-item{padding:13px;gap:10px}
+ .ca-admin-media{width:88px;height:90px}
+ .ca-admin-title strong{font-size:16px}
+ .ca-admin-user .ca-admin-media,.ca-admin-audit .ca-admin-media{width:50px;height:55px}
+ .ca-admin-dialog{padding:20px}
+ .ca-admin-dialog-actions button{flex:1}
+}
