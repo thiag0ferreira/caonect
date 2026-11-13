@@ -20,7 +20,7 @@ import './interactions.css'
 type Page='Início'|'Explorar'|'Perdidos'|'Match'|'Favoritos'|'Adoções'|'Perfil'|'Admin'
 const pageFromUrl=():Page=>{
  const params=new URLSearchParams(window.location.search)
- return params.has('alert')||params.get('pagina')==='perdidos-encontrados'?'Perdidos':params.get('pagina')==='admin'?'Admin':'Início'
+ return params.has('alert')||params.get('pagina')==='perdidos-encontrados'?'Perdidos':params.has('pet')?'Explorar':params.get('pagina')==='admin'?'Admin':'Início'
 }
 const nav:{name:Page;icon:ReactNode}[]=[{name:'Início',icon:<House/>},{name:'Explorar',icon:<Search/>},{name:'Perdidos',icon:<HeartHandshake/>},{name:'Match',icon:<Sparkles/>},{name:'Favoritos',icon:<Heart/>},{name:'Adoções',icon:<ClipboardList/>},{name:'Perfil',icon:<UserRound/>}]
 function App(){
@@ -46,13 +46,13 @@ function App(){
  const go=(p:Page)=>{
   if(p==='Perdidos'){
    const url=new URL(window.location.href)
-   url.searchParams.delete('alert');url.searchParams.set('pagina','perdidos-encontrados')
+   url.searchParams.delete('alert');url.searchParams.delete('pet');url.searchParams.set('pagina','perdidos-encontrados')
    window.history.pushState({},'',url.pathname+url.search)
   }else{
    const url=new URL(window.location.href)
    if(p==='Admin')url.searchParams.set('pagina','admin')
    else url.searchParams.delete('pagina')
-   url.searchParams.delete('alert')
+   url.searchParams.delete('alert');url.searchParams.delete('pet')
    window.history.pushState({},'',url.pathname+url.search)
   }
   setPage(p);setMenu(false);window.scrollTo({top:0,behavior:'smooth'})

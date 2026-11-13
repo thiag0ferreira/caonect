@@ -1,0 +1,12 @@
+.adopt-share-backdrop{position:fixed;inset:0;z-index:90;background:#0e231dcc;display:flex;align-items:center;justify-content:center;padding:15px;overflow:auto}
+.adopt-share-dialog{background:#fff;border-radius:20px;padding:24px;width:min(760px,100%);max-height:min(94vh,1100px);overflow:auto;overscroll-behavior:contain}
+.adopt-share-message{margin:14px 0 6px;border-radius:12px;background:#e9f5ed;border:1px solid #c8e4d2;padding:11px 13px;color:#285b4e;font-size:13px;line-height:1.5}
+.adopt-share-trigger{display:inline-flex;gap:7px;align-items:center;justify-content:center}
+.pet-actions .adopt-share-trigger{grid-column:1/-1;border:1px solid #bed7c8;color:#285b4e;background:#eaf5ef}
+.pet-actions .adopt-share-trigger:hover{background:#dcefe3}
+.pet-card-share{width:100%;margin-top:9px;border:1px solid #cddfd1;border-radius:10px;padding:9px;font-size:12px;font-weight:800;color:#285b4e;background:#f2f8f3;display:flex;align-items:center;justify-content:center;gap:7px}
+.pet-card-share:hover,.pet-owner-share:hover{background:#e4f1e9}
+.pet-owner-share{font-size:12px;font-weight:750;color:#285b4e;background:#eff7f0;border:1px solid #d4e7d9;border-radius:8px;padding:8px 11px;display:inline-flex;align-items:center;gap:6px;margin-left:9px}
+.adopt-deeplink-note{max-width:680px;margin:18px auto;padding:20px;border-radius:15px;background:#faf7f2;color:#4b6d5a;text-align:center;font-size:14px}
+.adopt-deeplink-note button{margin-top:10px}
+@media(max-width:700px){.adopt-share-backdrop{padding:8px}.adopt-share-dialog{padding:16px;max-height:94vh}.pet-owner-share{margin:8px 0 0}.pet-actions .adopt-share-trigger{grid-column:1}}

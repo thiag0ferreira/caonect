@@ -7,8 +7,79 @@ const safeReplace=(html,regex,tag)=>html.replace(regex,tag)
 const meta=(property,value)=>'<meta property="'+property+'" content="'+escapeAttr(value)+'"/>'
 const twitter=(name,value)=>'<meta name="'+name+'" content="'+escapeAttr(value)+'"/>'
 
+// Metadados dos links públicos de adoção. Consulta apenas anúncios aprovados e disponíveis.
+async function petMeta(context,id){
+ const supabaseUrl=context.env?.VITE_SUPABASE_URL
+ const key=context.env?.VITE_SUPABASE_PUBLISHABLE_KEY||context.env?.VITE_SUPABASE_ANON_KEY
+ if(!supabaseUrl||!key)return context.next()
+ let base
+ try{base=new URL(supabaseUrl);if(base.protocol!=='https:')return context.next()}
+ catch{return context.next()}
+ const url=new URL('/rest/v1/pets',base)
+ url.searchParams.set('select','id,name,species,district,city,age_label,status,review_status,photo_urls,image_url')
+ url.searchParams.set('id','eq.'+id)
+ url.searchParams.set('status','eq.available')
+ url.searchParams.set('review_status','eq.approved')
+ url.searchParams.set('limit','1')
+ let rows
+ try{
+  const headers={apikey:key}
+  if(key.startsWith('eyJ'))headers.Authorization='Bearer '+key
+  const result=await fetch(url,{headers,signal:AbortSignal.timeout(3500)})
+  if(!result.ok)return context.next()
+  rows=await result.json()
+ }catch{return context.next()}
+ const pet=Array.isArray(rows)?rows[0]:null
+ if(!pet)return context.next()
+ const name=clean(pet.name||'Novo amigo')
+ const city=clean(pet.city||'')
+ const district=clean(pet.district||'')
+ const loc=[district,city].filter(Boolean).join(', ')
+ // Somente imagens públicas do bucket oficial de pets (não usar URL externa arbitrária).
+ const candidates=[...(Array.isArray(pet.photo_urls)?pet.photo_urls:[]),pet.image_url].filter(Boolean)
+ let img=''
+ for(const value of candidates){
+  try{
+   const imageUrl=new URL(value)
+   if(imageUrl.protocol==='https:'&&imageUrl.hostname===base.hostname&&
+      imageUrl.pathname.startsWith('/storage/v1/object/public/pet-images/')){
+     img=imageUrl.toString();break
+   }
+  }catch{}
+ }
+ const label='Disponível para adoção'
+ const title=clean(name+' • '+label+' | Cãonect')
+ const description=clean('Conheça '+name+' em '+loc+'. Veja as fotos e converse com o responsável pela adoção no Cãonect.')
+ const canonical='https://www.caonect.com.br/?pet='+encodeURIComponent(id)
+ const response=await context.next()
+ if(!response.ok||!response.headers.get('content-type')?.includes('text/html'))return response
+ let html=await response.text()
+ html=safeReplace(html,/<meta property="og:title"[^>]*\/>/,meta('og:title',title))
+ html=safeReplace(html,/<meta property="og:description"[^>]*\/>/,meta('og:description',description))
+ html=safeReplace(html,/<meta property="og:url"[^>]*\/>/,meta('og:url',canonical))
+ if(img){
+  html=safeReplace(html,/<meta property="og:image"[^>]*\/>/,meta('og:image',img))
+  html=safeReplace(html,/<meta property="og:image:alt"[^>]*\/>/,meta('og:image:alt','Foto de '+name+' • '+label))
+  html=html.replace(/\s*<meta property="og:image:(width|height)"[^>]*\/>/g,'')
+  html=safeReplace(html,/<meta name="twitter:image"[^>]*\/>/,twitter('twitter:image',img))
+ }
+ html=safeReplace(html,/<meta name="twitter:title"[^>]*\/>/,twitter('twitter:title',title))
+ html=safeReplace(html,/<meta name="twitter:description"[^>]*\/>/,twitter('twitter:description',description))
+ html=safeReplace(html,/<meta name="description"[^>]*\/>/,twitter('description',description))
+ html=safeReplace(html,/<link rel="canonical"[^>]*\/>/,'<link rel="canonical" href="'+escapeAttr(canonical)+'"/>')
+ html=safeReplace(html,/<title>[^<]*<\/title>/,'<title>'+escapeAttr(title)+'</title>')
+ const headers=new Headers(response.headers)
+ headers.set('content-type','text/html; charset=utf-8')
+ headers.delete('content-length');headers.delete('etag')
+ headers.set('cache-control','public, max-age=120')
+ headers.set('x-content-type-options','nosniff')
+ return new Response(html,{status:response.status,statusText:response.statusText,headers})
+}
+
 export async function onRequestGet(context){
  const requestUrl=new URL(context.request.url)
+ const petId=requestUrl.searchParams.get('pet')
+ if(uuid.test(petId||''))return petMeta(context,petId)
  const id=requestUrl.searchParams.get('alert')
  if(!uuid.test(id||''))return context.next()
  const supabaseUrl=context.env?.VITE_SUPABASE_URL
